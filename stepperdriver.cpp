@@ -4,13 +4,15 @@
 
 #define NEGATIVSENS 0x01
 #define HOMING 0x02
+#define MILLIMODE 0x04
 #define STEPHIGH    0x10
 
 #define MAXSTEPS 1000000 /// number of steps per seconds
 
 Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, int enState)
   : enPin(en), stepPin(step), dirPin(dir), endPin(end), _enable(enState), _max(max), _state(0),
-    _position(0), _speed(0), _nbsteps(0), _accel(10), _minspeed(100), _maxspeed(2000)
+    _position(0), _speed(0), _nbsteps(0), _accel(10), _minspeed(100), _maxspeed(2000),
+    _stepsmm(1)
 {
   pinMode(this->enPin,OUTPUT); 
   pinMode(this->stepPin,OUTPUT); 
@@ -32,6 +34,15 @@ void Stepper::setup(Stepper::Setting setting, int value)
 		case Stepper::MaxPosition:
 			this->_max = value;
 		break;
+		case Stepper::StepsPerMilliMeter:
+			this->_stepsmm = value;
+		break;
+		case Stepper::MilliMeterMode:
+			if (value)
+				this->_state |= MILLIMODE;
+			else
+				this->_state &= ~MILLIMODE;
+		break;
 	}
 }
 int Stepper::turn(int nbsteps, int speed)
@@ -50,6 +61,8 @@ int Stepper::turn(int nbsteps, int speed)
   }
   this->_nbsteps = (nbsteps<0)?-nbsteps:nbsteps;
   this->_speed = this->_minspeed;
+  if (this->_state & MILLIMODE)
+    speed /= this->_stepsmm;
   this->_speedtarget = (speed < this->_maxspeed)?speed:this->_maxspeed;
   digitalWrite(this->dirPin, dir);
   return 0;

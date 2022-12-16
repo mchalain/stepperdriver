@@ -15,6 +15,7 @@ class Stepper
   unsigned short int _maxspeed;
   unsigned short int _speed;
   unsigned short int _speedtarget;
+  unsigned short int _stepsmm;
   char _state;
   char _enable;
   int _ptime;
@@ -28,6 +29,8 @@ public:
     MaxPosition,
     Accel,
     MaxSpeed,
+    StepsPerMilliMeter,
+    MilliMeterMode,
   };
   Stepper(int en, int step, int dir, unsigned int max, int end = -1, int enState = LOW);
   void setup(Setting setting, int value);
