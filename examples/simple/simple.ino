@@ -1,6 +1,6 @@
 #include "stepperdriver.hpp"
 
-#define ledPin 25
+#define ledPin LED_BUILTIN
 
 Stepper *stepper;
 
