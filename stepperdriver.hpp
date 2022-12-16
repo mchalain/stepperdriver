@@ -10,7 +10,11 @@ class Stepper
   int _max;
   int _position;
   int _nbsteps;
+  unsigned short int _accel;
+  unsigned short int _minspeed;
+  unsigned short int _maxspeed;
   unsigned short int _speed;
+  unsigned short int _speedtarget;
   char _state;
   char _enable;
   int _ptime;
@@ -19,8 +23,15 @@ class Stepper
   int _checktimer();
   void _handler();
 public:
+  enum Setting
+  {
+    MaxPosition,
+    Accel,
+    MaxSpeed,
+  };
   Stepper(int en, int step, int dir, unsigned int max, int end = -1, int enState = LOW);
-  int turn(int nbsteps, int speed = 500);
+  void setup(Setting setting, int value);
+  int turn(int nbsteps, int speed = 4000);
   void home();
   int step(int speed);
   int step();
