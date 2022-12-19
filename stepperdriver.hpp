@@ -22,7 +22,7 @@ class Stepper
     public:
       virtual void settargetspeed(unsigned short int speed)
       { _targetspeed = speed;}
-      virtual unsigned short int speed(unsigned short int speed) = 0;
+      virtual unsigned short int speed(unsigned short int speed, int nbsteps) = 0;
   };
   class Linear: public Move
   {
@@ -35,7 +35,7 @@ class Stepper
     public:
 	  Linear(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel);
       void settargetspeed(unsigned short int speed);
-      unsigned short int speed(unsigned short int speed);
+      unsigned short int speed(unsigned short int speed, int nbsteps);
   };
   Linear *_linear;
   Move *_move;

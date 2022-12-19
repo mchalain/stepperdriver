@@ -77,7 +77,7 @@ int Stepper::turn(int nbsteps, int speed)
 		speed /= this->_stepsmm;
 	changedirection(dir);
 	this->_linear->settargetspeed(speed);
-	this->_speed = this->_linear->speed(0);
+	this->_speed = this->_linear->speed(0, this->_nbsteps);
 	this->_move = this->_linear;
 	return 0;
 }
@@ -114,11 +114,13 @@ void Stepper::Linear::settargetspeed(unsigned short int speed)
 {
 	this->_speedtarget = (speed < this->_maxspeed)?speed:this->_maxspeed;
 }
-unsigned short int Stepper::Linear::speed(unsigned short int speed)
+unsigned short int Stepper::Linear::speed(unsigned short int speed, int nbsteps)
 {
 	if (speed == 0)
 		speed = this->_minspeed;
-	if (speed < this->_speedtarget)
+	if (nbsteps < (speed / this->_accel))
+		speed -= this->_accel;
+	else if (speed < this->_speedtarget)
 		speed += this->_accel;
 	return speed;
 }
@@ -128,7 +130,7 @@ int Stepper::_checktimer()
 	if (ret)
 	{
 		this->_ptime += ((MAXSTEPS / 2) / this->_speed);
-		this->_speed = this->_move->speed(this->_speed);
+		this->_speed = this->_move->speed(this->_speed, this->_nbsteps);
 	}
 	return ret;
 }
@@ -170,7 +172,7 @@ int Stepper::step(int speed)
 		if (this->_state & HOMING)
 		{
 			this->_position = 1; // keep the position positiv while end sensor is LOW
-			this->_nbsteps = 1;
+			this->_nbsteps = this->_max;
 		}
 		if (digitalRead(this->endPin) == LOW)
 		{
