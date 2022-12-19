@@ -11,7 +11,7 @@
 
 Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, int enState)
   : enPin(en), stepPin(step), dirPin(dir), endPin(end), _enable(enState), _max(max), _state(0),
-    _position(0), _speed(0), _nbsteps(0), _accel(10), _minspeed(100), _maxspeed(2000),
+    _position(0), _speed(0), _nbsteps(0),
     _stepsmm(1)
 {
 	pinMode(this->enPin,OUTPUT);
@@ -20,16 +20,17 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, int enSta
 	if (this->endPin != -1)
 		pinMode(this->endPin,INPUT);
 	digitalWrite(this->enPin, !this->_enable);
+	this->_linear = new Linear(2000, 0, 10);
 }
 void Stepper::setup(Stepper::Setting setting, int value)
 {
 	switch (setting)
 	{
 		case Stepper::Accel:
-			this->_accel = value;
+			this->_linear->_accel = value;
 		break;
 		case Stepper::MaxSpeed:
-			this->_maxspeed = value;
+			this->_linear->_maxspeed = value;
 		break;
 		case Stepper::MaxPosition:
 			this->_max = value;
@@ -61,12 +62,12 @@ int Stepper::turn(int nbsteps, int speed)
 		this->_state &= ~NEGATIVSENS;
 		this->_nbsteps = nbsteps;
 	}
-	this->_speed = this->_minspeed;
 	if (this->_state & MILLIMODE)
 		speed /= this->_stepsmm;
-	this->_speedtarget = (speed < this->_maxspeed)?speed:this->_maxspeed;
+	this->_linear->settargetspeed(speed);
+	this->_speed = this->_linear->speed(0);
 	digitalWrite(this->dirPin, dir);
-	this->_move = new Linear(this->_speedtarget, this->_minspeed, this->_accel);
+	this->_move = this->_linear;
 	return 0;
 }
 void Stepper::home(int speed)
@@ -95,10 +96,18 @@ int Stepper::_time()
 Stepper::Linear::Linear(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel)
 	: _maxspeed(maxspeed), _minspeed(minspeed), _accel(accel)
 {
+	if (this->_minspeed < this->_accel)
+		this->_minspeed = this->_accel;
+}
+void Stepper::Linear::settargetspeed(unsigned short int speed)
+{
+	this->_speedtarget = (speed < this->_maxspeed)?speed:this->_maxspeed;
 }
 unsigned short int Stepper::Linear::speed(unsigned short int speed)
 {
-	if (speed < this->_maxspeed)
+	if (speed == 0)
+		speed = this->_minspeed;
+	if (speed < this->_speedtarget)
 		speed += this->_accel;
 	return speed;
 }
@@ -114,7 +123,6 @@ void Stepper::stop()
 {
 	digitalWrite(this->enPin, !this->_enable);
 	this->_nbsteps = 0;
-	delete this->_move;
 	this->_move = NULL;
 }
 int Stepper::enabled()
