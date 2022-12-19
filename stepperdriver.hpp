@@ -20,8 +20,21 @@ class Stepper
   char _enable;
   int _ptime;
 
-  unsigned short int _linearspeed(unsigned short int speed);
-
+  class Move
+  {
+    public:
+      virtual unsigned short int speed(unsigned short int speed) = 0;
+  };
+  class Linear: public Move
+  {
+      unsigned short int _accel;
+      unsigned short int _minspeed;
+      unsigned short int _maxspeed;
+    public:
+	  Linear(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel);
+      unsigned short int speed(unsigned short int speed);
+  };
+  Move *_move;
   int _time();
   int _checktimer();
   void _handler();

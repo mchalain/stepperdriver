@@ -66,6 +66,7 @@ int Stepper::turn(int nbsteps, int speed)
 		speed /= this->_stepsmm;
 	this->_speedtarget = (speed < this->_maxspeed)?speed:this->_maxspeed;
 	digitalWrite(this->dirPin, dir);
+	this->_move = new Linear(this->_speedtarget, this->_minspeed, this->_accel);
 	return 0;
 }
 void Stepper::home(int speed)
@@ -91,9 +92,13 @@ int Stepper::_time()
 {
 	return micros();
 }
-unsigned short int Stepper::_linearspeed(unsigned short int speed)
+Stepper::Linear::Linear(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel)
+	: _maxspeed(maxspeed), _minspeed(minspeed), _accel(accel)
 {
-	if (speed < this->_speedtarget)
+}
+unsigned short int Stepper::Linear::speed(unsigned short int speed)
+{
+	if (speed < this->_maxspeed)
 		speed += this->_accel;
 	return speed;
 }
@@ -102,13 +107,15 @@ int Stepper::_checktimer()
 	int ret = (this->_ptime - this->_time()) <= 0;
 	if (ret)
 		this->_ptime += ((MAXSTEPS / 2) / this->_speed);
-	this->_speed = _linearspeed(this->_speed);
+	this->_speed = this->_move->speed(this->_speed);
 	return ret;
 }
 void Stepper::stop()
 {
 	digitalWrite(this->enPin, !this->_enable);
 	this->_nbsteps = 0;
+	delete this->_move;
+	this->_move = NULL;
 }
 int Stepper::enabled()
 {
