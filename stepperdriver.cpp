@@ -54,12 +54,13 @@ int Stepper::turn(int nbsteps, int speed)
   {
     this->_state |= NEGATIVSENS;
     dir = HIGH;
+    this->_nbsteps = -nbsteps;
   }
   else
   {
     this->_state &= ~NEGATIVSENS;
+    this->_nbsteps = nbsteps;
   }
-  this->_nbsteps = (nbsteps<0)?-nbsteps:nbsteps;
   this->_speed = this->_minspeed;
   if (this->_state & MILLIMODE)
     speed /= this->_stepsmm;
@@ -67,9 +68,11 @@ int Stepper::turn(int nbsteps, int speed)
   digitalWrite(this->dirPin, dir);
   return 0;
 }
-void Stepper::home()
+void Stepper::home(int speed)
 {
-  turn(-1 * this->_position);
+  if (this->endPin != -1)
+    this->_position = 1;
+  turn(-1 * this->_position, speed);
   if (this->endPin != -1)
     this->_state |= HOMING;
 }
@@ -128,7 +131,7 @@ void Stepper::_handler()
 int Stepper::step(int speed)
 {
   if (!enabled())
-    return  -1;
+    return  0;
   if (this->endPin != -1 && (this->_state & NEGATIVSENS))
   {
     if (this->_state & HOMING)
@@ -140,6 +143,7 @@ int Stepper::step(int speed)
     {
       stop();
       this->_position = 0;
+      this->_state &= ~HOMING;
       return -1;
     }
   }
