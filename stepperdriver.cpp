@@ -46,27 +46,38 @@ void Stepper::setup(Stepper::Setting setting, int value)
 		break;
 	}
 }
-int Stepper::turn(int nbsteps, int speed)
+void Stepper::changedirection(int dir)
 {
-	if (enabled())
-	return -1;
-	int dir = LOW;
-	if (nbsteps<0)
+	if (dir == NEGATIVSENS)
 	{
 		this->_state |= NEGATIVSENS;
-		dir = HIGH;
-		this->_nbsteps = -nbsteps;
+		digitalWrite(this->dirPin, HIGH);
 	}
 	else
 	{
 		this->_state &= ~NEGATIVSENS;
+		digitalWrite(this->dirPin, LOW);
+	}
+}
+int Stepper::turn(int nbsteps, int speed)
+{
+	if (enabled())
+	return -1;
+	int dir = 0;
+	if (nbsteps<0)
+	{
+		dir = NEGATIVSENS;
+		this->_nbsteps = -nbsteps;
+	}
+	else
+	{
 		this->_nbsteps = nbsteps;
 	}
 	if (this->_state & MILLIMODE)
 		speed /= this->_stepsmm;
+	changedirection(dir);
 	this->_linear->settargetspeed(speed);
 	this->_speed = this->_linear->speed(0);
-	digitalWrite(this->dirPin, dir);
 	this->_move = this->_linear;
 	return 0;
 }
@@ -115,8 +126,10 @@ int Stepper::_checktimer()
 {
 	int ret = (this->_ptime - this->_time()) <= 0;
 	if (ret)
+	{
 		this->_ptime += ((MAXSTEPS / 2) / this->_speed);
-	this->_speed = this->_move->speed(this->_speed);
+		this->_speed = this->_move->speed(this->_speed);
+	}
 	return ret;
 }
 void Stepper::stop()
