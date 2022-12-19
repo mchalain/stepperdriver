@@ -20,6 +20,8 @@ class Stepper
   char _enable;
   int _ptime;
 
+  unsigned short int _linearspeed(unsigned short int speed);
+
   int _time();
   int _checktimer();
   void _handler();

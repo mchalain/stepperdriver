@@ -91,13 +91,18 @@ int Stepper::_time()
 {
 	return micros();
 }
+unsigned short int Stepper::_linearspeed(unsigned short int speed)
+{
+	if (speed < this->_speedtarget)
+		speed += this->_accel;
+	return speed;
+}
 int Stepper::_checktimer()
 {
 	int ret = (this->_ptime - this->_time()) <= 0;
 	if (ret)
 		this->_ptime += ((MAXSTEPS / 2) / this->_speed);
-	if (this->_speed < this->_speedtarget)
-		this->_speed += this->_accel;
+	this->_speed = _linearspeed(this->_speed);
 	return ret;
 }
 void Stepper::stop()
