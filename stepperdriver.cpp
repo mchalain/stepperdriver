@@ -2,6 +2,8 @@
 
 #include "stepperdriver.hpp"
 
+#define TOGGLESENS 0xF1
+#define POSITIVSENS 0x00
 #define NEGATIVSENS 0x01
 #define HOMING 0x02
 #define MILLIMODE 0x04
@@ -52,6 +54,10 @@ void Stepper::setup(Stepper::Setting setting, int value)
 }
 void Stepper::changedirection(int dir)
 {
+	if (dir == TOGGLESENS)
+	{
+		dir = (this->_state & NEGATIVSENS)?0:NEGATIVSENS;
+	}
 	if (dir == NEGATIVSENS)
 	{
 		this->_state |= NEGATIVSENS;
