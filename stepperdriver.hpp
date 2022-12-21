@@ -62,5 +62,6 @@ public:
   void stop();
   int enabled();
   unsigned int position();
+  unsigned int max();
 };
 #endif

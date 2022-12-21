@@ -148,6 +148,10 @@ unsigned int Stepper::position()
 {
 	return this->_position;
 }
+unsigned int Stepper::max()
+{
+	return this->_max;
+}
 void Stepper::_handler()
 {
 	if (this->_state & STEPHIGH)
