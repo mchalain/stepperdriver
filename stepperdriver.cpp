@@ -162,7 +162,18 @@ unsigned int Stepper::max()
 void Stepper::_handler()
 {
 	_settimer((MAXSTEPS / 2) / this->_speed);
+	unsigned short int oldspeed = this->_speed;
 	this->_speed = this->_move->speed(this->_speed, this->_nbsteps);
+	if (this->_speed == 0xFFFF)
+	{
+		this->_speed = oldspeed;
+		if (this->_state & STEPHIGH)
+		{
+			digitalWrite(this->enPin, !this->_enable);
+			changedirection(TOGGLESENS);
+			digitalWrite(this->enPin, this->_enable);
+		}
+	}
 	if (this->_state & STEPHIGH)
 	{
 		digitalWrite(this->stepPin,HIGH);
