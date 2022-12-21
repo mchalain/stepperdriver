@@ -113,26 +113,6 @@ int Stepper::_time()
 {
 	return micros();
 }
-Stepper::Linear::Linear(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel)
-	: _maxspeed(maxspeed), _minspeed(minspeed), _accel(accel)
-{
-	if (this->_minspeed < this->_accel)
-		this->_minspeed = this->_accel;
-}
-void Stepper::Linear::settargetspeed(unsigned short int speed)
-{
-	this->_speedtarget = (speed < this->_maxspeed)?speed:this->_maxspeed;
-}
-unsigned short int Stepper::Linear::speed(unsigned short int speed, int nbsteps)
-{
-	if (speed == 0)
-		speed = this->_minspeed;
-	if (nbsteps < (speed / this->_accel))
-		speed -= this->_accel;
-	else if (speed < this->_speedtarget)
-		speed += this->_accel;
-	return speed;
-}
 int Stepper::_checktimer()
 {
 	int ret = (this->_ptime - this->_time()) <= 0;
@@ -222,4 +202,25 @@ int Stepper::step(int speed)
 int Stepper::step()
 {
 	return step(this->_speed);
+}
+/***********************************/
+Stepper::Linear::Linear(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel)
+	: _maxspeed(maxspeed), _minspeed(minspeed), _accel(accel)
+{
+	if (this->_minspeed < this->_accel)
+		this->_minspeed = this->_accel;
+}
+void Stepper::Linear::settargetspeed(unsigned short int speed)
+{
+	this->_speedtarget = (speed < this->_maxspeed)?speed:this->_maxspeed;
+}
+unsigned short int Stepper::Linear::speed(unsigned short int speed, int nbsteps)
+{
+	if (speed == 0)
+		speed = this->_minspeed;
+	if (nbsteps < (speed / this->_accel))
+		speed -= this->_accel;
+	else if (speed < this->_speedtarget)
+		speed += this->_accel;
+	return speed;
 }
