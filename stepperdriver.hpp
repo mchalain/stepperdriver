@@ -50,6 +50,7 @@ public:
     MaxSpeed,
     StepsPerMilliMeter,
     MilliMeterMode,
+    Movement,
   };
   Stepper(int en, int step, int dir, unsigned int max, int end = -1, int enState = LOW);
   void setup(Setting setting, int value);

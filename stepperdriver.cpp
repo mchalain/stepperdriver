@@ -21,11 +21,15 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, int enSta
 		pinMode(this->endPin,INPUT);
 	digitalWrite(this->enPin, !this->_enable);
 	this->_linear = new Linear(2000, 0, 10);
+	this->_move = this->_linear;
 }
 void Stepper::setup(Stepper::Setting setting, int value)
 {
 	switch (setting)
 	{
+		case Stepper::Movement:
+			this->_move = this->_linear;
+		break;
 		case Stepper::Accel:
 			this->_linear->_accel = value;
 		break;
@@ -76,9 +80,8 @@ int Stepper::turn(int nbsteps, int speed)
 	if (this->_state & MILLIMODE)
 		speed /= this->_stepsmm;
 	changedirection(dir);
-	this->_linear->settargetspeed(speed);
-	this->_speed = this->_linear->speed(0, this->_nbsteps);
-	this->_move = this->_linear;
+	this->_move->settargetspeed(speed);
+	this->_speed = this->_move->speed(0, this->_nbsteps);
 	return 0;
 }
 void Stepper::home(int speed)
@@ -138,7 +141,6 @@ void Stepper::stop()
 {
 	digitalWrite(this->enPin, !this->_enable);
 	this->_nbsteps = 0;
-	this->_move = NULL;
 }
 int Stepper::enabled()
 {
