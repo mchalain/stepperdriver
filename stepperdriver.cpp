@@ -130,11 +130,6 @@ unsigned short int Stepper::Linear::speed(unsigned short int speed, int nbsteps)
 int Stepper::_checktimer()
 {
 	int ret = (this->_ptime - this->_time()) <= 0;
-	if (ret)
-	{
-		_settimer((MAXSTEPS / 2) / this->_speed);
-		this->_speed = this->_move->speed(this->_speed, this->_nbsteps);
-	}
 	return ret;
 }
 void Stepper::_settimer(int latence)
@@ -160,6 +155,8 @@ unsigned int Stepper::max()
 }
 void Stepper::_handler()
 {
+	_settimer((MAXSTEPS / 2) / this->_speed);
+	this->_speed = this->_move->speed(this->_speed, this->_nbsteps);
 	if (this->_state & STEPHIGH)
 	{
 		digitalWrite(this->stepPin,HIGH);
