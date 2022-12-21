@@ -132,10 +132,14 @@ int Stepper::_checktimer()
 	int ret = (this->_ptime - this->_time()) <= 0;
 	if (ret)
 	{
-		this->_ptime += ((MAXSTEPS / 2) / this->_speed);
+		_settimer((MAXSTEPS / 2) / this->_speed);
 		this->_speed = this->_move->speed(this->_speed, this->_nbsteps);
 	}
 	return ret;
+}
+void Stepper::_settimer(int latence)
+{
+	this->_ptime += latence;
 }
 void Stepper::stop()
 {

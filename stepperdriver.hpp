@@ -41,6 +41,7 @@ class Stepper
   Move *_move;
   int _time();
   int _checktimer();
+  void _settimer(int latence);
   void _handler();
 public:
   enum Setting
