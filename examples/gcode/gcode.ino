@@ -1,4 +1,12 @@
 
+/**
+ * GCode parser for stepperdriver
+ * Commandes vailable:
+ *  G28 : search the endstop of each axe
+ *  G0 X2000 : move the motor of X axe to 2000
+ *  G1 X400 : move the motor of X axe to 2000 fast
+ *  G2 D3000 : move X Y motors to generate circle diameter 3000
+ */
 #include "stepperdriver.hpp"
 
 #define ledPin 25
