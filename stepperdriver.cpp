@@ -23,6 +23,7 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, int enSta
 		pinMode(this->endPin,INPUT);
 	digitalWrite(this->enPin, !this->_enable);
 	this->_linear = new Linear(2000, 0, 10);
+	this->_circular = new Circular(2000, 0, 10);
 	this->_move = this->_linear;
 }
 void Stepper::setup(Stepper::Setting setting, int value)
@@ -30,7 +31,10 @@ void Stepper::setup(Stepper::Setting setting, int value)
 	switch (setting)
 	{
 		case Stepper::Movement:
-			this->_move = this->_linear;
+			if (value == CIRCULARMOVEMENT)
+				this->_move = this->_circular;
+			else
+				this->_move = this->_linear;
 		break;
 		case Stepper::Accel:
 			this->_linear->_accel = value;
@@ -202,6 +206,36 @@ int Stepper::step(int speed)
 int Stepper::step()
 {
 	return step(this->_speed);
+}
+/***********************************/
+Stepper::Circular::Circular(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel)
+	: _maxspeed(maxspeed), _minspeed(minspeed), _accel(accel)
+{
+	if (this->_minspeed < this->_accel)
+		this->_minspeed = this->_accel;
+}
+void Stepper::Circular::settargetspeed(unsigned short int speed)
+{
+	this->_speedtarget = (speed < this->_maxspeed)?speed:this->_maxspeed;
+}
+unsigned short int Stepper::Circular::speed(unsigned short int speed, int nbsteps)
+{
+	if (speed == 0)
+	{
+		speed = this->_speedtarget;
+		this->_nbsteps = nbsteps;
+	}
+	speed = (int)((float)this->_speedtarget * sin(TWO_PI * (float)nbsteps/(float)this->_nbsteps));
+	Serial.printf("%f   %f\n", (float)nbsteps/(float)this->_nbsteps, sin(TWO_PI * (float)(nbsteps - 1)/(float)this->_nbsteps));
+	speed = (speed < 0)? -speed:speed;
+	if (speed == this->_speedtarget)
+		Serial.printf("PI/2\n");
+	speed++;
+	if ((this->_nbsteps / 2) == nbsteps)
+	{
+		speed = -1;
+	}
+	return speed;
 }
 /***********************************/
 Stepper::Linear::Linear(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel)

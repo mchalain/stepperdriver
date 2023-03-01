@@ -1,6 +1,9 @@
 #ifndef __STEPPERDRIVER_HPP__
 #define __STEPPERDRIVER_HPP__
 
+#define LINEARMOVEMENT 0x01
+#define CIRCULARMOVEMENT 0x02
+
 class Stepper
 {
   int enPin;
@@ -37,7 +40,22 @@ class Stepper
       void settargetspeed(unsigned short int speed);
       unsigned short int speed(unsigned short int speed, int nbsteps);
   };
+  class Circular: public Move
+  {
+    friend Stepper;
+    protected:
+      unsigned short int _accel;
+      unsigned short int _minspeed;
+      unsigned short int _maxspeed;
+      unsigned short int _speedtarget;
+      int _nbsteps;
+    public:
+	  Circular(unsigned short int maxspeed, unsigned short int minspeed, unsigned short int accel);
+      void settargetspeed(unsigned short int speed);
+      unsigned short int speed(unsigned short int speed, int nbsteps);
+  };
   Linear *_linear;
+  Circular *_circular;
   Move *_move;
   int _time();
   int _checktimer();
