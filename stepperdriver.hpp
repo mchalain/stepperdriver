@@ -1,22 +1,24 @@
 #ifndef __STEPPERDRIVER_HPP__
 #define __STEPPERDRIVER_HPP__
 
+#include "gpio_stepperdriver.hpp"
+
 #define LINEARMOVEMENT 0x01
 #define CIRCULARMOVEMENT 0x02
 
 class Stepper
 {
-  int enPin;
-  int stepPin;
-  int dirPin;
-  int endPin;
+  GeneralOutput *enPin;
+  GeneralOutput *stepPin;
+  GeneralOutput *dirPin;
+  GeneralInput *endPin;
   int _max;
   int _position;
   int _nbsteps;
   unsigned short int _speed;
   unsigned short int _stepsmm;
   char _state;
-  char _enable;
+  bool _enable;
   int _ptime;
 
   class Move
@@ -71,7 +73,7 @@ public:
     MilliMeterMode,
     Movement,
   };
-  Stepper(int en, int step, int dir, unsigned int max, int end = -1, int enState = LOW);
+  Stepper(int en, int step, int dir, unsigned int max, int end = -1, bool enState = false);
   void setup(Setting setting, int value);
   int turn(int nbsteps, int speed = 4000);
   void changedirection(int dir);
