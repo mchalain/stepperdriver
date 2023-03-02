@@ -22,6 +22,6 @@ class HalDigiOutput : public GeneralOutput
     void value(bool change);
 };
 
-#include "hal/arduino/gpio.cpp"
+#include "../hal/arduino/gpio.cpp"
 
 #endif
