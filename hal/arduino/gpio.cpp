@@ -2,7 +2,8 @@
 
 #include "gpio.hpp"
 
-HalDigiInput::HalDigiInput(int chip, int number) : GeneralInput(), number(number)
+HalDigiInput::HalDigiInput(int chip, int number)
+	: GeneralInput(), number(number)
 {
 	pinMode(this->number, INPUT);
 }

@@ -1,5 +1,5 @@
-#ifndef GPIO_STEPPERDRIVER_HPP__
-#define GPIO_STEPPERDRIVER_HPP__
+#ifndef __GPIO_STEPPERDRIVER_HPP__
+#define __GPIO_STEPPERDRIVER_HPP__
 
 class GeneralIO
 {

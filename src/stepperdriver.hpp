@@ -2,6 +2,7 @@
 #define __STEPPERDRIVER_HPP__
 
 #include "gpio_stepperdriver.hpp"
+#include "timer_stepperdriver.hpp"
 
 #define LINEARMOVEMENT 0x01
 #define CIRCULARMOVEMENT 0x02
@@ -19,7 +20,7 @@ class Stepper
   unsigned short int _stepsmm;
   char _state;
   bool _enable;
-  int _ptime;
+  Timer *timer;
 
   class Move
   {

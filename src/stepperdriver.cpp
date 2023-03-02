@@ -12,7 +12,7 @@
 
 Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enState)
   : enPin(nullptr), stepPin(nullptr), dirPin(nullptr), endPin(nullptr), _enable(enState), _max(max), _state(0),
-    _position(0), _speed(0), _nbsteps(0),
+    _position(0), _speed(1), _nbsteps(0),
     _stepsmm(1)
 {
 	this->enPin = GeneralOutput::makeGeneralOutput(0, en);
@@ -24,6 +24,7 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enSt
 	this->_linear = new Linear(2000, 0, 10);
 	this->_circular = new Circular(2000, 0, 10);
 	this->_move = this->_linear;
+	this->timer = Timer::makeTimer();
 }
 void Stepper::setup(Stepper::Setting setting, int value)
 {
@@ -109,23 +110,11 @@ void Stepper::start()
 		return;
 	}
 	this->enPin->value(this->_enable);
-	this->_ptime = this->_time() + ((MAXSTEPS / 2) / this->_speed);
-}
-int Stepper::_time()
-{
-	return micros();
-}
-int Stepper::_checktimer()
-{
-	int ret = (this->_ptime - this->_time()) <= 0;
-	return ret;
-}
-void Stepper::_settimer(int latence)
-{
-	this->_ptime += latence;
+	this->timer->start((MAXSTEPS / 2) / this->_speed);
 }
 void Stepper::stop()
 {
+	this->timer->stop();
 	this->enPin->value(!this->_enable);
 	this->_nbsteps = 0;
 }
@@ -143,7 +132,6 @@ unsigned int Stepper::max()
 }
 void Stepper::_handler()
 {
-	_settimer((MAXSTEPS / 2) / this->_speed);
 	unsigned short int oldspeed = this->_speed;
 	this->_speed = this->_move->speed(this->_speed, this->_nbsteps);
 	if (this->_speed == 0xFFFF)
@@ -195,8 +183,9 @@ int Stepper::step(int speed)
 		stop();
 		return 0;
 	}
-	if (_checktimer())
+	if (this->timer->check())
 	{
+		this->timer->restart((MAXSTEPS / 2) / this->_speed);
 		_handler();
 	}
 	return this->_nbsteps;
