@@ -2,8 +2,8 @@
 
 #include "gpio.hpp"
 
-HalDigiInput::HalDigiInput(int chip, int number)
-	: GeneralInput(), number(number)
+HalDigiInput::HalDigiInput(int chip, int number, bool inverted)
+	: GeneralInput(), number(number), inverted(inverted)
 {
 	pinMode(this->number, INPUT);
 }
@@ -14,12 +14,14 @@ HalDigiInput::~HalDigiInput()
 
 bool HalDigiInput::value()
 {
+	if (inverted)
+		return !digitalRead(this->number);
 	return digitalRead(this->number);
 }
 
-GeneralInput *GeneralInput::makeGeneralInput(int chip, int number)
+GeneralInput *GeneralInput::makeGeneralInput(int chip, int number, bool inverted)
 {
-	return new HalDigiInput(chip, number);
+	return new HalDigiInput(chip, number, inverted);
 }
 
 HalDigiOutput::HalDigiOutput(int chip, int number) : GeneralOutput(), number(number)

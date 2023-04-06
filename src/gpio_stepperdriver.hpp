@@ -11,7 +11,7 @@ class GeneralInput : public GeneralIO
 {
   public:
     virtual bool value() = 0;
-    static GeneralInput *makeGeneralInput(int chip, int number);
+    static GeneralInput *makeGeneralInput(int chip, int number, bool inverted = false);
 };
 
 class GeneralOutput : public GeneralIO

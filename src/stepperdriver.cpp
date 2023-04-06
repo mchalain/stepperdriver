@@ -20,6 +20,10 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enSt
 	this->dirPin = GeneralOutput::makeGeneralOutput(0, dir);
 	if (end != -1)
 		this->endPin = GeneralInput::makeGeneralInput(0, end);
+	if (end < 0)
+	{
+		this->endPin = GeneralInput::makeGeneralInput(0, end, true);
+	}
 	this->enPin->value(!this->_enable);
 	this->_linear = new Linear(2000, 0, 10);
 	this->_circular = new Circular(2000, 0, 10);
@@ -168,7 +172,7 @@ int Stepper::step(int speed)
 			this->_position = 1; // keep the position positiv while end sensor is LOW
 			this->_nbsteps = this->_max;
 		}
-		if (!this->endPin->value())
+		if (this->endPin->value())
 		{
 			stop();
 			this->_position = 0;

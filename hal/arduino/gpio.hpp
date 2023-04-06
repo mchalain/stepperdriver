@@ -6,8 +6,9 @@
 class HalDigiInput : public GeneralInput
 {
     int number;
+    bool inverted;
   public:
-    HalDigiInput(int chip, int number);
+    HalDigiInput(int chip, int number, bool inverted = false);
     virtual ~HalDigiInput();
     bool value();
 };
