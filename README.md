@@ -81,3 +81,15 @@ void home()
 
 If the endstop is available, the motor runs while the sensor is HIGH.
 
+# Examples
+## gcode
+This example take commands from the serial link. Only one motor is described.  
+The current commands are:
+
+ * **G28** : to find the zero on each motor
+ * **G0**  : to move to the coordinate from command line: G1 X20000
+ * **G1**  : exactly the same as G1
+ * **G90** : set the system to use absolute coordinate
+ * **G91** : set the system to use relativ coordinate
+ * **M0**  : to stop all motor during movement
+ * **G2**  : ....should define a rotation movement
