@@ -5,7 +5,7 @@
 HalDigiInput::HalDigiInput(int chip, int number, bool inverted)
 	: GeneralInput(), number(number), inverted(inverted)
 {
-	pinMode(this->number, INPUT);
+	pinMode(number, INPUT);
 }
 
 HalDigiInput::~HalDigiInput()
@@ -14,9 +14,10 @@ HalDigiInput::~HalDigiInput()
 
 bool HalDigiInput::value()
 {
+	bool value = digitalRead(this->number);
 	if (inverted)
-		return !digitalRead(this->number);
-	return digitalRead(this->number);
+		return !value;
+	return value;
 }
 
 GeneralInput *GeneralInput::makeGeneralInput(int chip, int number, bool inverted)

@@ -18,12 +18,10 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enSt
 	this->enPin = GeneralOutput::makeGeneralOutput(0, en);
 	this->stepPin = GeneralOutput::makeGeneralOutput(0, step);
 	this->dirPin = GeneralOutput::makeGeneralOutput(0, dir);
-	if (end != -1)
+	if (end > -1)
 		this->endPin = GeneralInput::makeGeneralInput(0, end);
-	if (end < 0)
-	{
-		this->endPin = GeneralInput::makeGeneralInput(0, end, true);
-	}
+	else if (end < -1)
+		this->endPin = GeneralInput::makeGeneralInput(0, -end, true);
 	this->enPin->value(!this->_enable);
 	this->_linear = new Linear(2000, 0, 10);
 	this->_circular = new Circular(2000, 0, 10);
