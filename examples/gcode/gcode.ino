@@ -10,7 +10,8 @@
 #include "stepperdriver.hpp"
 
 #define ledPin 25
-#define NORMALSPEED 1000
+#define FEEDRATE 1000
+#define RAPIDRATE 1000
 
 #define NBAXIS 6
 #define XM 0
@@ -22,7 +23,7 @@
 
 #define SAFETED 5
 
-const char *motion[6] = { "X", "Y", "Z", "A", "B", "C"};
+const char motion[6] = { 'X', 'Y', 'Z', 'A', 'B', 'C'};
 Stepper *stepper[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 int ortogonalaxis = ZM;
 
@@ -96,19 +97,21 @@ void executeGCode(String cmd)
     case 0:
     case 1:
     {
-      int speed = parseNumber(cmd, 'F', NORMALSPEED);
-      int x = parseNumber(cmd, 'X', 0);
-      x += (stepper[XM] && relativ)? stepper[XM]->position():0;
-      int y = parseNumber(cmd, 'Y', 0);
-      y += (stepper[YM] && relativ)? stepper[YM]->position():0;
-      int z = parseNumber(cmd, 'Z', 0);
-      z += (stepper[ZM] && relativ)? stepper[ZM]->position():0;
-      line(x, y, z, speed);
+      int value[NBAXIS] = {0};
+      int speed = parseNumber(cmd, 'F', FEEDRATE);
+      if (cmdIndex == 0) /** G0 means rapid traverse **/
+        speed = RAPIDRATE;
+      for (int i = 0; i < NBAXIS; i++)
+      {
+        value[i] = parseNumber(cmd, motion[i], 0);
+        value[i] += (stepper[i] && relativ)? stepper[i]->position():0;
+      }
+      line(value[XM], value[YM], value[ZM], speed);
     }
     break;
     case 2:
     {
-      int speed = parseNumber(cmd, 'F', NORMALSPEED);
+      int speed = parseNumber(cmd, 'F', FEEDRATE);
       int diameter = parseNumber(cmd, 'D', 1000);
       int x = parseNumber(cmd, 'X', 0);
       int y = parseNumber(cmd, 'Y', 0);
@@ -127,7 +130,7 @@ void executeGCode(String cmd)
       if (stepper[ortogonalaxis])
       {
         stepper[ortogonalaxis]->setup(Stepper::Movement, LINEARMOVEMENT);
-        stepper[ortogonalaxis]->turn(SAFETED - stepper[XM]->position(), speed);
+        stepper[ortogonalaxis]->turn(SAFETED - stepper[XM]->position(), RAPIDRATE);
       }
       for (int i = 0; i < NBAXIS; i++)
       {
@@ -174,7 +177,7 @@ void loop() {
       {
         if (stepper[i]->enabled())
         {
-          Serial.printf("position %d: %d\r\n", motion[i], stepper[i]->position());
+          Serial.printf("position %c: %d\r\n", motion[i], stepper[i]->position());
         }
         digitalWrite(ledPin,LOW);
       }
