@@ -181,6 +181,15 @@ void executeGCode(String cmd)
       }
     }
     break;
+    case 201:
+    {
+      int accel;
+      for (int i = 0; i < NBAXIS; i++)
+      {
+        accel = parseNumber(cmd, motion[i], -1);
+        stepper[i]->setup(Stepper::Accel, accel);
+      }
+    }
   }
 }
 
