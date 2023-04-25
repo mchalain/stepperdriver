@@ -10,8 +10,6 @@
 #include "stepperdriver.hpp"
 
 #define ledPin 25
-#define FEEDRATE 1000
-#define RAPIDRATE 1000
 
 #define NBAXIS 6
 #define XM 0
@@ -25,6 +23,14 @@
 
 const char motion[6] = { 'X', 'Y', 'Z', 'A', 'B', 'C'};
 Stepper *stepper[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+
+#define FEEDRATE 1
+#define RAPIDRATE 2
+#define ORTOGONALAXIS 3
+#define NBVARIABLES ORTOGONALAXIS
+int variables[NBVARIABLES] = {
+  1000, 1000, ZM
+};
 int ortogonalaxis = ZM;
 
 void setup() {
@@ -88,6 +94,7 @@ int parseNumber(String cmd, char option, int defvalue)
   }
   return defvalue;
 }
+
 void executeGCode(String cmd)
 {
   static int relativ = 0;
@@ -127,16 +134,23 @@ void executeGCode(String cmd)
     break;
     case 28:
     {
-      if (stepper[ortogonalaxis])
+      /**
+       * Up the head before to search the home on the other axis
+       */
+      if (stepper[variables[ORTOGONALAXIS]])
       {
-        stepper[ortogonalaxis]->setup(Stepper::Movement, LINEARMOVEMENT);
-        stepper[ortogonalaxis]->turn(SAFETED - stepper[XM]->position(), RAPIDRATE);
+        stepper[variables[ORTOGONALAXIS]]->setup(Stepper::Movement, LINEARMOVEMENT);
+        stepper[variables[ORTOGONALAXIS]]->turn(SAFETED - stepper[XM]->position(), RAPIDRATE);
       }
       for (int i = 0; i < NBAXIS; i++)
       {
         if (stepper[i])
         {
-          stepper[i]->home();
+          stepper[i]->home(variables[RAPIDRATE]);
+          stepper[i]->start();
+          stepper[i]->turn(100, variables[RAPIDRATE]);
+          stepper[i]->start();
+          stepper[i]->home(variables[FEEDRATE]);
           stepper[i]->start();
         }
       }
