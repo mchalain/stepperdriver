@@ -42,15 +42,33 @@ void setup() {
 
 void line(int x, int y, int z, int speed)
 {
+  int coefX = 1, coefY;
+  int sqX, sqY;
+  if (variables[ORTOGONALAXIS] == ZM && x != 0 && y != 0)
+  {
+    /**
+     * trigonometry: linear movement X and Y should arrive at the same time
+     * sq(H) = sq(X) + sq(Y)
+     * SpeedX = sqrt(sq(X)/(sq(X)-sq(Y)) * Speed
+     */
+    sqX = sq(x);
+    sqY = sq(y);
+    coefX = sqX;
+    coefX /= coefX + sqY;
+    coefX = sqrt(coefX);
+    coefY = sqY;
+    coefY /= coefY + sqX;
+    coefY = sqrt(coefY);
+  }
   if (stepper[XM] != NULL && x != stepper[XM]->position())
   {
     stepper[XM]->setup(Stepper::Movement, LINEARMOVEMENT);
-    x = stepper[XM]->turn(x - stepper[XM]->position(), speed);
+    x = stepper[XM]->turn(x - stepper[XM]->position(), coefX * speed);
   }
   if (stepper[YM] != NULL && y != stepper[YM]->position())
   {
     stepper[YM]->setup(Stepper::Movement, LINEARMOVEMENT);
-    y = stepper[YM]->turn(y - stepper[YM]->position(), speed);
+    y = stepper[YM]->turn(y - stepper[YM]->position(), coefY * speed);
   }
   if (stepper[ZM] != NULL && z != stepper[ZM]->position())
   {
