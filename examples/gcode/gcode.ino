@@ -171,8 +171,19 @@ void executeGCode(String cmd)
       }
     }
     break;
+    case 92:
+    {
+      int stepspermilli;
+      for (int i = 0; i < NBAXIS; i++)
+      {
+        stepspermilli = parseNumber(cmd, motion[i], -1);
+        stepper[i]->setup(Stepper::StepsPerMilliMeter, stepspermilli);
+      }
+    }
+    break;
   }
 }
+
 void loop() {
   if (Serial.available() != 0)
   {
