@@ -12,31 +12,40 @@
 #define ledPin 25
 #define NORMALSPEED 1000
 
-Stepper *stepper[4] = {NULL, NULL, NULL, NULL};
+#define NBAXIS 6
+#define XM 0
+#define YM 1
+#define ZM 2
+#define AM 3
+#define BM 4
+#define CM 5
+
+const char *motion[6] = { "X", "Y", "Z", "A", "B", "C"};
+Stepper *stepper[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 
 void setup() {
   Serial.begin(11500);
   while (!Serial);
-  stepper[0] = new Stepper(2,3,4,14000,5);
+  stepper[XM] = new Stepper(2,3,4,14000,5);
   pinMode(ledPin,OUTPUT);
 }
 
 void line(int x, int y, int z, int speed)
 {
-  if (stepper[0] != NULL && x != stepper[0]->position())
+  if (stepper[XM] != NULL && x != stepper[XM]->position())
   {
-    stepper[0]->setup(Stepper::Movement, LINEARMOVEMENT);
-    x = stepper[0]->turn(x - stepper[0]->position(), speed);
+    stepper[XM]->setup(Stepper::Movement, LINEARMOVEMENT);
+    x = stepper[XM]->turn(x - stepper[XM]->position(), speed);
   }
-  if (stepper[1] != NULL && y != stepper[1]->position())
+  if (stepper[YM] != NULL && y != stepper[YM]->position())
   {
-    stepper[1]->setup(Stepper::Movement, LINEARMOVEMENT);
-    y = stepper[1]->turn(y - stepper[1]->position(), speed);
+    stepper[YM]->setup(Stepper::Movement, LINEARMOVEMENT);
+    y = stepper[YM]->turn(y - stepper[YM]->position(), speed);
   }
-  if (stepper[2] != NULL && z != stepper[2]->position())
+  if (stepper[ZM] != NULL && z != stepper[ZM]->position())
   {
-    stepper[2]->setup(Stepper::Movement, LINEARMOVEMENT);
-    z = stepper[2]->turn(z - stepper[2]->position(), speed);
+    stepper[ZM]->setup(Stepper::Movement, LINEARMOVEMENT);
+    z = stepper[ZM]->turn(z - stepper[ZM]->position(), speed);
   }
   for (int i = 0; i < 4; i++)
   {
@@ -47,10 +56,10 @@ void line(int x, int y, int z, int speed)
 void circle(int xorig, int yorig, int zorig, int diameter, int speed)
 {
 
-  if (stepper[0] != NULL && diameter <= stepper[0]->position() + stepper[0]->max())
+  if (stepper[XM] != NULL && diameter <= stepper[XM]->position() + stepper[XM]->max())
   {
-    stepper[0]->setup(Stepper::Movement, CIRCULARMOVEMENT);
-    stepper[0]->turn(diameter, speed);
+    stepper[XM]->setup(Stepper::Movement, CIRCULARMOVEMENT);
+    stepper[XM]->turn(diameter, speed);
   }
   for (int i = 0; i < 4; i++)
   {
@@ -86,11 +95,11 @@ void executeGCode(String cmd)
     {
       int speed = parseNumber(cmd, 'F', NORMALSPEED);
       int x = parseNumber(cmd, 'X', 0);
-      x += (stepper[0] && relativ)? stepper[0]->position():0;
+      x += (stepper[XM] && relativ)? stepper[XM]->position():0;
       int y = parseNumber(cmd, 'Y', 0);
-      y += (stepper[1] && relativ)? stepper[1]->position():0;
+      y += (stepper[YM] && relativ)? stepper[YM]->position():0;
       int z = parseNumber(cmd, 'Z', 0);
-      z += (stepper[2] && relativ)? stepper[2]->position():0;
+      z += (stepper[ZM] && relativ)? stepper[ZM]->position():0;
       line(x, y, z, speed);
     }
     break;
@@ -112,20 +121,20 @@ void executeGCode(String cmd)
     break;
     case 28:
     {
-      if (stepper[0])
+      if (stepper[XM])
       {
-        stepper[0]->home();
-        stepper[0]->start();
+        stepper[XM]->home();
+        stepper[XM]->start();
       }
-      if (stepper[1])
+      if (stepper[YM])
       {
-        stepper[1]->home();
-        stepper[1]->start();
+        stepper[YM]->home();
+        stepper[YM]->start();
       }
-      if (stepper[2])
+      if (stepper[ZM])
       {
-        stepper[2]->home();
-        stepper[2]->start();
+        stepper[ZM]->home();
+        stepper[ZM]->start();
       }
     }
     break;
@@ -135,17 +144,17 @@ void executeGCode(String cmd)
   {
     case 0:
     {
-      if (stepper[0])
+      if (stepper[XM])
       {
-        stepper[0]->stop();
+        stepper[XM]->stop();
       }
-      if (stepper[1])
+      if (stepper[YM])
       {
-        stepper[1]->stop();
+        stepper[YM]->stop();
       }
-      if (stepper[2])
+      if (stepper[ZM])
       {
-        stepper[2]->stop();
+        stepper[ZM]->stop();
       }
     }
     break;
@@ -169,7 +178,7 @@ void loop() {
       {
         if (stepper[i]->enabled())
         {
-          Serial.printf("position %d: %d\r\n", i, stepper[i]->position());
+          Serial.printf("position %d: %d\r\n", motion[i], stepper[i]->position());
         }
         digitalWrite(ledPin,LOW);
       }
