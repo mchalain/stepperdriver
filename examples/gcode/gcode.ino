@@ -20,8 +20,11 @@
 #define BM 4
 #define CM 5
 
+#define SAFETED 5
+
 const char *motion[6] = { "X", "Y", "Z", "A", "B", "C"};
 Stepper *stepper[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
+int ortogonalaxis = ZM;
 
 void setup() {
   Serial.begin(11500);
@@ -47,7 +50,7 @@ void line(int x, int y, int z, int speed)
     stepper[ZM]->setup(Stepper::Movement, LINEARMOVEMENT);
     z = stepper[ZM]->turn(z - stepper[ZM]->position(), speed);
   }
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < NBAXIS; i++)
   {
     if (stepper[i])
       stepper[i]->start();
@@ -61,7 +64,7 @@ void circle(int xorig, int yorig, int zorig, int diameter, int speed)
     stepper[XM]->setup(Stepper::Movement, CIRCULARMOVEMENT);
     stepper[XM]->turn(diameter, speed);
   }
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < NBAXIS; i++)
   {
     if (stepper[i])
       stepper[i]->start();
@@ -121,20 +124,18 @@ void executeGCode(String cmd)
     break;
     case 28:
     {
-      if (stepper[XM])
+      if (stepper[ortogonalaxis])
       {
-        stepper[XM]->home();
-        stepper[XM]->start();
+        stepper[ortogonalaxis]->setup(Stepper::Movement, LINEARMOVEMENT);
+        stepper[ortogonalaxis]->turn(SAFETED - stepper[XM]->position(), speed);
       }
-      if (stepper[YM])
+      for (int i = 0; i < NBAXIS; i++)
       {
-        stepper[YM]->home();
-        stepper[YM]->start();
-      }
-      if (stepper[ZM])
-      {
-        stepper[ZM]->home();
-        stepper[ZM]->start();
+        if (stepper[i])
+        {
+          stepper[i]->home();
+          stepper[i]->start();
+        }
       }
     }
     break;
@@ -144,17 +145,12 @@ void executeGCode(String cmd)
   {
     case 0:
     {
-      if (stepper[XM])
+      for (int i = 0; i < NBAXIS; i++)
       {
-        stepper[XM]->stop();
-      }
-      if (stepper[YM])
-      {
-        stepper[YM]->stop();
-      }
-      if (stepper[ZM])
-      {
-        stepper[ZM]->stop();
+        if (stepper[i])
+        {
+          stepper[i]->stop();
+        }
       }
     }
     break;
@@ -168,7 +164,7 @@ void loop() {
     Serial.printf("%s \r\n", cmd.c_str());
     executeGCode(cmd);
   }
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < NBAXIS; i++)
   {
     int ret = 0;
     if (stepper[i])
