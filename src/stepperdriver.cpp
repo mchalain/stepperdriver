@@ -28,6 +28,35 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enSt
 	this->_move = this->_linear;
 	this->timer = Timer::makeTimer();
 }
+int Stepper::setup(Stepper::Setting setting)
+{
+	int ret = -1;
+	switch (setting)
+	{
+		case Stepper::Movement:
+			if (this->_move == this->_circular)
+				ret = CIRCULARMOVEMENT;
+			else
+				ret = LINEARMOVEMENT;
+		break;
+		case Stepper::Accel:
+			ret = this->_linear->_accel;
+		break;
+		case Stepper::MaxSpeed:
+			ret = this->_linear->_maxspeed;
+		break;
+		case Stepper::MaxPosition:
+			ret = this->_max;
+		break;
+		case Stepper::StepsPerMilliMeter:
+			ret = this->_stepsmm;
+		break;
+		case Stepper::MilliMeterMode:
+			ret = !((this->_state & MILLIMODE) == 0);
+		break;
+	}
+	return ret;
+}
 void Stepper::setup(Stepper::Setting setting, int value)
 {
 	switch (setting)
@@ -35,25 +64,29 @@ void Stepper::setup(Stepper::Setting setting, int value)
 		case Stepper::Movement:
 			if (value == CIRCULARMOVEMENT)
 				this->_move = this->_circular;
-			else
+			else if (value == LINEARMOVEMENT)
 				this->_move = this->_linear;
 		break;
 		case Stepper::Accel:
-			this->_linear->_accel = value;
+			if (value > 0)
+				this->_linear->_accel = value;
 		break;
 		case Stepper::MaxSpeed:
-			this->_linear->_maxspeed = value;
+			if (value > 0)
+				this->_linear->_maxspeed = value;
 		break;
 		case Stepper::MaxPosition:
-			this->_max = value;
+			if (value > 1)
+				this->_max = value;
 		break;
 		case Stepper::StepsPerMilliMeter:
-			this->_stepsmm = value;
+			if (value > 0)
+				this->_stepsmm = value;
 		break;
 		case Stepper::MilliMeterMode:
-			if (value)
+			if (value > 0)
 				this->_state |= MILLIMODE;
-			else
+			else if (value == 0)
 				this->_state &= ~MILLIMODE;
 		break;
 	}

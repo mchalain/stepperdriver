@@ -76,6 +76,7 @@ public:
   };
   Stepper(int en, int step, int dir, unsigned int max, int end = -1, bool enState = false);
   void setup(Setting setting, int value);
+  int setup(Setting setting);
   int turn(int nbsteps, int speed = 4000);
   void changedirection(int dir);
   void home(int speed = 2000);
