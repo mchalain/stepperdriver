@@ -24,9 +24,9 @@
 const char motion[6] = { 'X', 'Y', 'Z', 'A', 'B', 'C'};
 Stepper *stepper[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 
-#define FEEDRATE 1
-#define RAPIDRATE 2
-#define ORTOGONALAXIS 3
+#define FEEDRATE 0
+#define RAPIDRATE 1
+#define ORTOGONALAXIS 2
 #define NBVARIABLES ORTOGONALAXIS
 int variables[NBVARIABLES] = {
   1000, 1000, ZM
@@ -208,6 +208,12 @@ void executeGCode(String cmd)
         stepper[i]->setup(Stepper::Accel, accel);
       }
     }
+  }
+  cmdIndex = parseNumber(cmd, '#', -1);
+  if (cmdIndex > 500)
+  {
+    int value = parseNumber(cmd, '=', 0);
+    variables[cmdIndex - 500] = value;
   }
 }
 
