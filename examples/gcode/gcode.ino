@@ -215,6 +215,19 @@ int executeGCode(String cmd, int running)
       running = 1;
     }
     break;
+    case 114:
+    {
+      Serial.printf("ok ");
+      for (int i = 0; i < NBAXIS; i++)
+      {
+        if (stepper[i])
+        {
+          Serial.printf("%c: %d ", motion[i], stepper[i]->position());
+        }
+      }
+      Serial.printf("\r\n");
+    }
+    break;
     case 201:
     {
       int accel;
