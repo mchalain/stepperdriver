@@ -32,6 +32,10 @@ int variables[NBVARIABLES + 1] = {
   1000, 1000, ZM, 100, 0
 };
 
+// function for sequences
+typedef int (*action_f)(int running);
+action_f action = NULL;
+
 void setup() {
   Serial.begin(11500);
   while (!Serial);
@@ -104,6 +108,62 @@ int parseNumber(String cmd, char option, int defvalue)
     defvalue = cmd.substring(index).toInt();
   }
   return defvalue;
+}
+
+int unique_action(int running)
+{
+  return --running;
+}
+
+int home_action(int running)
+{
+  int axis = NBAXIS - ((running + 2) / 3);
+  switch (running)
+  {
+    case 15 + 1:
+    case 12 + 1:
+    case 9 + 1:
+    case 6 + 1:
+    case 3 + 1:
+    case 1:
+    {
+      if (stepper[axis])
+      {
+        stepper[axis]->home(variables[FEEDRATE]);
+        stepper[axis]->start();
+      }
+    }
+    break;
+    case 15 + 2:
+    case 12 + 2:
+    case 9 + 2:
+    case 6 + 2:
+    case 3 + 2:
+    case 2:
+    {
+      if (stepper[axis])
+      {
+        stepper[axis]->turn(variables[SAFETED], variables[RAPIDRATE]);
+        stepper[axis]->start();
+      }
+    }
+    break;
+    case 15 + 3:
+    case 12 + 3:
+    case 9 + 3:
+    case 6 + 3:
+    case 3 + 3:
+    case 3:
+    {
+      if (stepper[axis])
+      {
+        stepper[axis]->home(variables[RAPIDRATE]);
+        stepper[axis]->start();
+      }
+    }
+    break;
+  }
+  return --running;
 }
 
 int executeGCode(String cmd, int running)
@@ -184,6 +244,7 @@ int executeGCode(String cmd, int running)
     case 1:
     {
       line(coord, speed);
+      action = unique_action;
       running = 1;
     }
     break;
@@ -191,6 +252,7 @@ int executeGCode(String cmd, int running)
     {
       int diameter = parseNumber(cmd, 'D', 1000);
       circle(coord, diameter, speed);
+      action = unique_action;
       running = 1;
     }
     break;
@@ -260,6 +322,10 @@ void loop()
     }
   }
   if (ret == 0)
+  {
+      running = action(running);
+  }
+  if (running == 0)
   {
     Serial.printf("ok ");
     for (int i = 0; i < NBAXIS; i++)
