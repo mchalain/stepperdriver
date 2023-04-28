@@ -178,6 +178,8 @@ int executeGCode(String cmd, int running)
         stepper[i]->stop();
       }
     }
+    action = unique_action;
+    running = 1;
     return 0;
   }
   if (running)
@@ -193,6 +195,8 @@ int executeGCode(String cmd, int running)
           stepper[i]->stop(true);
         }
       }
+      action = unique_action;
+      running = 1;
     }
     break;
     case 92:
@@ -207,6 +211,8 @@ int executeGCode(String cmd, int running)
           stepper[i]->setup(Stepper::MilliMeterMode, 1);
         }
       }
+      action = unique_action;
+      running = 1;
     }
     break;
     case 201:
@@ -217,7 +223,10 @@ int executeGCode(String cmd, int running)
         accel = parseNumber(cmd, motion[i], -1);
         stepper[i]->setup(Stepper::Accel, accel);
       }
+      action = unique_action;
+      running = 1;
     }
+    break;
   }
   /**
    * Parse X..., Y..., Z..., A..., B..., C...
@@ -255,9 +264,13 @@ int executeGCode(String cmd, int running)
     break;
     case 90:
       variables[ABSOLUTE] = 1;
+      action = unique_action;
+      running = 1;
     break;
     case 91:
       variables[ABSOLUTE] = 0;
+      action = unique_action;
+      running = 1;
     break;
     case 28:
     {
@@ -279,7 +292,11 @@ int executeGCode(String cmd, int running)
   {
     int value = parseNumber(cmd, '=', 0x7FFF);
     if (value != 0x7FFF)
+    {
       variables[cmdIndex - 500] = value;
+      action = unique_action;
+      running = 1;
+    }
     else
       Serial.printf("#%d = %d\r\n", 500+cmdIndex, variables[cmdIndex - 500]);
   }
