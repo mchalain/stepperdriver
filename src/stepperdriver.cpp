@@ -9,6 +9,7 @@
 #define STEPHIGH    0x10
 
 #define MAXSTEPS 1000000 /// number of steps per seconds
+#define DEBUGSTR do { debug("%s %d\r\n", __FUNCTION__, __LINE__);}while(0)
 
 Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enState)
   : enPin(nullptr), stepPin(nullptr), dirPin(nullptr), endPin(nullptr), _enable(enState), _max(max), _state(0),

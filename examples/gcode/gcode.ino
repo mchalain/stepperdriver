@@ -96,12 +96,9 @@ void circle(int coord[NBAXIS], int diameter, int speed)
 int parseNumber(String cmd, char option, int defvalue)
 {
   int index = 0;
-  while (cmd.length() > index)
-  {
-    if (cmd.charAt(index) == option)
-      break;
-    index++;
-  }
+  index = cmd.indexOf(option);
+  if (index < 0)
+    return defvalue;
   if (cmd.length() > index)
   {
     index++;
