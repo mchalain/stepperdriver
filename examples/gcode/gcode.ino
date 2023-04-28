@@ -72,9 +72,9 @@ void line(int coord[NBAXIS], int speed)
     }
   }
 }
+
 void circle(int coord[NBAXIS], int diameter, int speed)
 {
-
   for (int i = 0; i < 3; i++)
   {
     if (stepper[i] && coord[i] != 0)
@@ -91,8 +91,8 @@ void circle(int coord[NBAXIS], int diameter, int speed)
     if (stepper[i])
       stepper[i]->start();
   }
-
 }
+
 int parseNumber(String cmd, char option, int defvalue)
 {
   int index = 0;
@@ -190,7 +190,7 @@ int executeGCode(String cmd, int running)
       {
         if (stepper[i])
         {
-          stepper[i]->stop();
+          stepper[i]->stop(true);
         }
       }
     }
