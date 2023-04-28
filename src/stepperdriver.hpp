@@ -73,6 +73,7 @@ public:
     StepsPerMilliMeter,
     MilliMeterMode,
     Movement,
+    ForceEnable,
   };
   Stepper(int en, int step, int dir, unsigned int max, int end = -1, bool enState = false);
   void setup(Setting setting, int value);
@@ -84,7 +85,7 @@ public:
   int step(int speed);
   int step();
   void start();
-  void stop();
+  void stop(int disable = true);
   int enabled();
   unsigned int position();
   unsigned int max();

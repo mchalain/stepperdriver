@@ -6,9 +6,11 @@
 #define NEGATIVSENS 0x01
 #define HOMING 0x02
 #define MILLIMODE 0x04
+#define FORCE_ENABLE 0x08
 #define STEPHIGH    0x10
 
 #define MAXSTEPS 1000000 /// number of steps per seconds
+
 #define DEBUGSTR do { debug("%s %d\r\n", __FUNCTION__, __LINE__);}while(0)
 
 Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enState)
@@ -55,6 +57,9 @@ int Stepper::setup(Stepper::Setting setting)
 		case Stepper::MilliMeterMode:
 			ret = !((this->_state & MILLIMODE) == 0);
 		break;
+		case Stepper::ForceEnable:
+			ret = !((this->_state & FORCE_ENABLE) == 0);
+		break;
 	}
 	return ret;
 }
@@ -89,6 +94,12 @@ void Stepper::setup(Stepper::Setting setting, int value)
 				this->_state |= MILLIMODE;
 			else if (value == 0)
 				this->_state &= ~MILLIMODE;
+		break;
+		case Stepper::ForceEnable:
+			if (value > 0)
+				this->_state |= FORCE_ENABLE;
+			else if (value == 0)
+				this->_state &= ~FORCE_ENABLE;
 		break;
 	}
 }
@@ -157,10 +168,11 @@ void Stepper::start()
 	this->enPin->value(this->_enable);
 	this->timer->start((MAXSTEPS / 2) / this->_speed);
 }
-void Stepper::stop()
+void Stepper::stop(int disable)
 {
 	this->timer->stop();
-	this->enPin->value(!this->_enable);
+	if (!(this->_state & FORCE_ENABLE) || disable)
+		this->enPin->value(!this->_enable);
 	this->_nbsteps = 0;
 }
 int Stepper::enabled()
