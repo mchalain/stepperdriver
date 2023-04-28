@@ -19,19 +19,18 @@
 #define BM 4
 #define CM 5
 
-#define SAFETED 5
-
 const char motion[6] = { 'X', 'Y', 'Z', 'A', 'B', 'C'};
 Stepper *stepper[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 
 #define FEEDRATE 0
 #define RAPIDRATE 1
 #define ORTOGONALAXIS 2
-#define NBVARIABLES ORTOGONALAXIS
-int variables[NBVARIABLES] = {
-  1000, 1000, ZM
+#define SAFETED 3
+#define ABSOLUTE 4
+#define NBVARIABLES ABSOLUTE
+int variables[NBVARIABLES + 1] = {
+  1000, 1000, ZM, 100, 0
 };
-int ortogonalaxis = ZM;
 
 void setup() {
   Serial.begin(11500);
@@ -40,54 +39,48 @@ void setup() {
   pinMode(ledPin,OUTPUT);
 }
 
-void line(int x, int y, int z, int speed)
+void line(int coord[NBAXIS], int speed)
 {
-  int coefX = 1, coefY;
-  int sqX, sqY;
-  if (variables[ORTOGONALAXIS] == ZM && x != 0 && y != 0)
+  int H = 0;
+  for (int i = 0; i < 3; i++)
   {
-    /**
-     * trigonometry: linear movement X and Y should arrive at the same time
-     * sq(H) = sq(X) + sq(Y)
-     * SpeedX = sqrt(sq(X)/(sq(X)-sq(Y)) * Speed
-     */
-    sqX = sq(x);
-    sqY = sq(y);
-    coefX = sqX;
-    coefX /= coefX + sqY;
-    coefX = sqrt(coefX);
-    coefY = sqY;
-    coefY /= coefY + sqX;
-    coefY = sqrt(coefY);
+    if (i != variables[ORTOGONALAXIS] && coord[i])
+      H += sq(coord[i]);
   }
-  if (stepper[XM] != NULL && x != stepper[XM]->position())
+  if (H)
+    H = sqrt(H);
+  for (int i = 0; i < 3; i++)
   {
-    stepper[XM]->setup(Stepper::Movement, LINEARMOVEMENT);
-    x = stepper[XM]->turn(x - stepper[XM]->position(), coefX * speed);
-  }
-  if (stepper[YM] != NULL && y != stepper[YM]->position())
-  {
-    stepper[YM]->setup(Stepper::Movement, LINEARMOVEMENT);
-    y = stepper[YM]->turn(y - stepper[YM]->position(), coefY * speed);
-  }
-  if (stepper[ZM] != NULL && z != stepper[ZM]->position())
-  {
-    stepper[ZM]->setup(Stepper::Movement, LINEARMOVEMENT);
-    z = stepper[ZM]->turn(z - stepper[ZM]->position(), speed);
+    if (stepper[i] && coord[i] != 0)
+    {
+      stepper[i]->setup(Stepper::Movement, LINEARMOVEMENT);
+      if (i != variables[ORTOGONALAXIS])
+        stepper[i]->move(coord[i], H, speed);
+      else
+        stepper[i]->turn(coord[i], speed);
+    }
   }
   for (int i = 0; i < NBAXIS; i++)
   {
     if (stepper[i])
+    {
       stepper[i]->start();
+    }
   }
 }
-void circle(int xorig, int yorig, int zorig, int diameter, int speed)
+void circle(int coord[NBAXIS], int diameter, int speed)
 {
 
-  if (stepper[XM] != NULL && diameter <= stepper[XM]->position() + stepper[XM]->max())
+  for (int i = 0; i < 3; i++)
   {
-    stepper[XM]->setup(Stepper::Movement, CIRCULARMOVEMENT);
-    stepper[XM]->turn(diameter, speed);
+    if (stepper[i] && coord[i] != 0)
+    {
+      if (i != variables[ORTOGONALAXIS])
+        stepper[i]->setup(Stepper::Movement, CIRCULARMOVEMENT);
+      else
+        stepper[i]->setup(Stepper::Movement, LINEARMOVEMENT);
+      stepper[i]->turn(diameter, speed);
+    }
   }
   for (int i = 0; i < NBAXIS; i++)
   {
