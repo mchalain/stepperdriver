@@ -106,69 +106,25 @@ int parseNumber(String cmd, char option, int defvalue)
   return defvalue;
 }
 
-void executeGCode(String cmd)
+int executeGCode(String cmd, int running)
 {
-  static int relativ = 0;
-  int cmdIndex = parseNumber(cmd, 'G', -1);
-  switch (cmdIndex)
-  {
-    case 0:
-    case 1:
-    {
-      int value[NBAXIS] = {0};
-      int speed = parseNumber(cmd, 'F', FEEDRATE);
-      if (cmdIndex == 0) /** G0 means rapid traverse **/
-        speed = RAPIDRATE;
-      for (int i = 0; i < NBAXIS; i++)
-      {
-        value[i] = parseNumber(cmd, motion[i], 0);
-        value[i] += (stepper[i] && relativ)? stepper[i]->position():0;
-      }
-      line(value[XM], value[YM], value[ZM], speed);
-    }
-    break;
-    case 2:
-    {
-      int speed = parseNumber(cmd, 'F', FEEDRATE);
-      int diameter = parseNumber(cmd, 'D', 1000);
-      int x = parseNumber(cmd, 'X', 0);
-      int y = parseNumber(cmd, 'Y', 0);
-      int z = parseNumber(cmd, 'Z', 0);
-      circle(x, y, z, diameter, speed);
-    }
-    break;
-    case 90:
-      relativ = 0;
-    break;
-    case 91:
-      relativ = 1;
-    break;
-    case 28:
-    {
-      /**
-       * Up the head before to search the home on the other axis
-       */
-      if (stepper[variables[ORTOGONALAXIS]])
-      {
-        stepper[variables[ORTOGONALAXIS]]->setup(Stepper::Movement, LINEARMOVEMENT);
-        stepper[variables[ORTOGONALAXIS]]->turn(SAFETED - stepper[XM]->position(), RAPIDRATE);
-      }
-      for (int i = 0; i < NBAXIS; i++)
-      {
-        if (stepper[i])
-        {
-          stepper[i]->home(variables[RAPIDRATE]);
-          stepper[i]->start();
-          stepper[i]->turn(100, variables[RAPIDRATE]);
-          stepper[i]->start();
-          stepper[i]->home(variables[FEEDRATE]);
-          stepper[i]->start();
-        }
-      }
-    }
-    break;
-  }
+  int coord[NBAXIS] = {0, 0, 0, 0, 0, 0};
+  int cmdIndex;
+
   cmdIndex = parseNumber(cmd, 'M', -1);
+  if (cmdIndex == 112)
+  {
+    for (int i = 0; i < NBAXIS; i++)
+    {
+      if (stepper[i])
+      {
+        stepper[i]->stop();
+      }
+    }
+    return 0;
+  }
+  if (running)
+    return -1;
   switch (cmdIndex)
   {
     case 0:
@@ -187,8 +143,12 @@ void executeGCode(String cmd)
       int stepspermilli;
       for (int i = 0; i < NBAXIS; i++)
       {
-        stepspermilli = parseNumber(cmd, motion[i], -1);
-        stepper[i]->setup(Stepper::StepsPerMilliMeter, stepspermilli);
+        if (stepper[i])
+        {
+          stepspermilli = parseNumber(cmd, motion[i], -1);
+          stepper[i]->setup(Stepper::StepsPerMilliMeter, stepspermilli);
+          stepper[i]->setup(Stepper::MilliMeterMode, 1);
+        }
       }
     }
     break;
@@ -202,45 +162,115 @@ void executeGCode(String cmd)
       }
     }
   }
+  /**
+   * Parse X..., Y..., Z..., A..., B..., C...
+   */
+  for (int i = 0; i < NBAXIS; i++)
+  {
+    coord[i] = parseNumber(cmd, motion[i], 0);
+    /**
+     * StepperDriver library uses only Relativ coordonnes
+     */
+    if (!variables[ABSOLUTE] && coord[i] && stepper[i])
+      coord[i] -= stepper[i]->position();
+  }
+  int speed = parseNumber(cmd, 'F', variables[FEEDRATE]);
+  cmdIndex = parseNumber(cmd, 'G', -1);
+  switch (cmdIndex)
+  {
+    case 0:
+      /** G0 means rapid traverse **/
+      speed = variables[RAPIDRATE];
+    case 1:
+    {
+      line(coord, speed);
+      running = 1;
+    }
+    break;
+    case 2:
+    {
+      int diameter = parseNumber(cmd, 'D', 1000);
+      circle(coord, diameter, speed);
+      running = 1;
+    }
+    break;
+    case 90:
+      variables[ABSOLUTE] = 1;
+    break;
+    case 91:
+      variables[ABSOLUTE] = 0;
+    break;
+    case 28:
+    {
+      /**
+       * Up the head before to search the home on the other axis
+       */
+      if (stepper[variables[ORTOGONALAXIS]])
+      {
+        stepper[variables[ORTOGONALAXIS]]->setup(Stepper::Movement, LINEARMOVEMENT);
+        stepper[variables[ORTOGONALAXIS]]->turn(variables[SAFETED], variables[RAPIDRATE]);
+      }
+      action = home_action;
+      running = 19;
+    }
+    break;
+  }
   cmdIndex = parseNumber(cmd, '#', -1);
   if (cmdIndex > 500)
   {
-    int value = parseNumber(cmd, '=', 0);
-    variables[cmdIndex - 500] = value;
+    int value = parseNumber(cmd, '=', 0x7FFF);
+    if (value != 0x7FFF)
+      variables[cmdIndex - 500] = value;
+    else
+      Serial.printf("#%d = %d\r\n", 500+cmdIndex, variables[cmdIndex - 500]);
   }
+  return running;
 }
 
-void loop() {
+void loop()
+{
+  static int running = 0;
   if (Serial.available() != 0)
   {
     String cmd = Serial.readString();
     cmd.trim();
-    Serial.printf("%s \r\n", cmd.c_str());
-    executeGCode(cmd);
+    running = executeGCode(cmd, running);
+    if (running < 0)
+    {
+      Serial.printf("rs\r\n");
+    }
   }
+  if (running == 0 || action == NULL)
+  {
+    running == 0;
+    delay(1000);
+    return;
+  }
+  digitalWrite(ledPin,HIGH);
+  int ret = 0;
   for (int i = 0; i < NBAXIS; i++)
   {
-    int ret = 0;
     if (stepper[i])
     {
-      ret = stepper[i]->step();
-      if (ret == 0)
+      int tmp = stepper[i]->step();
+      if (tmp > 0)
+        ret += tmp;
+      else if (tmp < 0)
+        Serial.printf("err endstop\r\n");
+    }
+  }
+  if (ret == 0)
+  {
+    Serial.printf("ok ");
+    for (int i = 0; i < NBAXIS; i++)
+    {
+      if (stepper[i] && stepper[i]->enabled())
       {
-        if (stepper[i]->enabled())
-        {
-          Serial.printf("position %c: %d\r\n", motion[i], stepper[i]->position());
-        }
-        digitalWrite(ledPin,LOW);
-      }
-      else if (ret > 0)
-      {
-        digitalWrite(ledPin,HIGH);
-      }
-      else
-      {
-        Serial.printf("Stopend\r\n");
-        digitalWrite(ledPin,LOW);
+        Serial.printf("%c: %d ", motion[i], stepper[i]->position());
       }
     }
+    Serial.printf("\r\n");
+    digitalWrite(ledPin,LOW);
+    action = NULL;
   }
 }
