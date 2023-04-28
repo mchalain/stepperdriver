@@ -87,9 +87,27 @@ This example take commands from the serial link. Only one motor is described.
 The current commands are:
 
  * **G28** : to find the zero on each motor
- * **G0**  : to move to the coordinate from command line: G1 X20000
- * **G1**  : exactly the same as G1
+ * **G0**  : to move to the coordinate from command line: G1 X20000 at fast speed
+ * **G1**  : exactly the same as G1 but at the feedrate speed
  * **G90** : set the system to use absolute coordinate
  * **G91** : set the system to use relativ coordinate
- * **M0**  : to stop all motor during movement
  * **G2**  : ....should define a rotation movement
+ * **M0**  ; stop the motors
+ * **M112**: urgent stop
+ * **M201**: set the maximum acceleration for each motor
+ * **M92** : set the number of steps per millimeter for each motor
+ * **F...**: set the feedrate (slow speed) for one movement
+ * **X...**: set a value for the X axis motor (depends on the command)
+ * **Y...**: idem for Y axis
+ * **Z...**: idem for Z axis
+ * **A...**: idem for A axis (rotation around X axis)
+ * **B...**: idem for B axis (rotation around Y axis)
+ * **C...**: idem for C axis (rotation around Z axis)
+ * **#...**: get/set a value in the table of variables
+
+The current variables are:
+ * **#500** : default feedrate speed
+ * **#501** : default fast speed
+ * **#502** : the ortogonal axis to the working plane (default: Z axis)
+ * **#503** : the safeted distance to move on the axis
+ * **#504** : set relative or absolute coordonnes (same as G90/G91)
