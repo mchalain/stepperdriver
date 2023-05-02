@@ -111,3 +111,9 @@ The current variables are:
  * **#502** : the ortogonal axis to the working plane (default: Z axis)
  * **#503** : the safeted distance to move on the axis
  * **#504** : set relative or absolute coordonnes (same as G90/G91)
+
+Returned strings:  
+Each command should return at least one line. The contain depends on the command but should begin by:
+ * **ok**  : the command is successful
+ * **rs**  : the command should be resended, the system is not ready to accept a new command
+ * **err** : an error occured
