@@ -152,10 +152,11 @@ int Stepper::turn(int distance, int speed)
 void Stepper::home(int speed)
 {
 	if (this->endPin != nullptr)
+	{
 		this->_position = 1;
-	turn(-1 * this->_position, speed);
-	if (this->endPin != nullptr)
 		this->_state |= HOMING;
+	}
+	turn(-1 * this->_position, speed);
 }
 void Stepper::start()
 {
@@ -172,7 +173,9 @@ void Stepper::stop(int disable)
 {
 	this->timer->stop();
 	if (!(this->_state & FORCE_ENABLE) || disable)
+	{
 		this->enPin->value(!this->_enable);
+	}
 	this->_nbsteps = 0;
 }
 int Stepper::enabled()
@@ -222,16 +225,26 @@ int Stepper::step(int speed)
 	{
 		if (this->_state & HOMING)
 		{
-			this->_position = 1; // keep the position positiv while end sensor is LOW
+			this->_position = this->_max; // keep the position positiv while end sensor is LOW
 			this->_nbsteps = this->_max;
 		}
 		if (this->endPin->value())
 		{
 			stop();
 			this->_position = 0;
-			this->_state &= ~HOMING;
-			return -1;
+			if (this->_state & HOMING)
+			{
+				this->_state &= ~HOMING;
+				return 0;
+			}
+			else
+				return -1;
 		}
+	}
+	if (this->timer->check())
+	{
+		this->timer->restart((MAXSTEPS / 2) / this->_speed);
+		_handler();
 	}
 	if ((this->_nbsteps == 0) ||
 		(this->_position == 0 && (this->_state & NEGATIVSENS)) ||
@@ -239,11 +252,6 @@ int Stepper::step(int speed)
 	{
 		stop();
 		return 0;
-	}
-	if (this->timer->check())
-	{
-		this->timer->restart((MAXSTEPS / 2) / this->_speed);
-		_handler();
 	}
 	return this->_nbsteps;
 }
