@@ -325,17 +325,22 @@ int executeGCode(String cmd, int running)
   return running;
 }
 
+String cmd = String();
 void loop()
 {
   static int running = 0;
   if (Serial.available() != 0)
   {
-    String cmd = Serial.readString();
-    cmd.trim();
-    running = executeGCode(cmd, running);
-    if (running < 0)
+    cmd += Serial.readString();
+    if (cmd.indexOf('\r') != -1)
     {
-      Serial.printf("rs\r\n");
+      cmd.trim();
+      running = executeGCode(cmd, running);
+      if (running < 0)
+      {
+        Serial.printf("rs" LF);
+      }
+      cmd = String();
     }
   }
   if (running == 0 || action == NULL)
