@@ -19,6 +19,8 @@
 #define BM 4
 #define CM 5
 
+#define LF "\r\n"
+
 const char motion[6] = { 'X', 'Y', 'Z', 'A', 'B', 'C'};
 Stepper *stepper[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 
@@ -178,8 +180,7 @@ int executeGCode(String cmd, int running)
         stepper[i]->stop();
       }
     }
-    action = unique_action;
-    running = 1;
+    Serial.printf("ok" LF);
     return 0;
   }
   if (running)
@@ -195,7 +196,7 @@ int executeGCode(String cmd, int running)
           stepper[i]->stop(true);
         }
       }
-      Serial.printf("ok\r\n");
+      Serial.printf("ok" LF);
     }
     break;
     case 92:
@@ -210,7 +211,7 @@ int executeGCode(String cmd, int running)
           stepper[i]->setup(Stepper::MilliMeterMode, 1);
         }
       }
-      Serial.printf("ok\r\n");
+      Serial.printf("ok" LF);
     }
     break;
     case 114:
@@ -223,7 +224,7 @@ int executeGCode(String cmd, int running)
           Serial.printf("%c: %d ", motion[i], stepper[i]->position());
         }
       }
-      Serial.printf("\r\n");
+      Serial.printf(LF);
     }
     break;
     case 201:
@@ -234,9 +235,15 @@ int executeGCode(String cmd, int running)
         accel = parseNumber(cmd, motion[i], -1);
         stepper[i]->setup(Stepper::Accel, accel);
       }
-      Serial.printf("ok\r\n");
+      Serial.printf("ok" LF);
     }
     break;
+    case -1:
+    break;
+    default:
+    {
+      Serial.printf("err M%d unknown" LF, cmdIndex);
+    }
   }
   /**
    * Parse X..., Y..., Z..., A..., B..., C...
@@ -274,11 +281,11 @@ int executeGCode(String cmd, int running)
     break;
     case 90:
       variables[ABSOLUTE] = 1;
-      Serial.printf("ok\r\n");
+      Serial.printf("ok" LF);
     break;
     case 91:
       variables[ABSOLUTE] = 0;
-      Serial.printf("ok\r\n");
+      Serial.printf("ok" LF);
     break;
     case 28:
     {
@@ -294,6 +301,12 @@ int executeGCode(String cmd, int running)
       running = 19;
     }
     break;
+    case -1:
+    break;
+    default:
+    {
+      Serial.printf("err G%d unknown" LF, cmdIndex);
+    }
   }
   cmdIndex = parseNumber(cmd, '#', -1);
   if (cmdIndex > 500)
@@ -302,13 +315,13 @@ int executeGCode(String cmd, int running)
     if (value != 0x7FFF)
     {
       variables[cmdIndex - 500] = value;
-      Serial.printf("ok\r\n");
+      Serial.printf("ok" LF);
     }
     else
-      Serial.printf("ok #%d = %d\r\n", 500+cmdIndex, variables[cmdIndex - 500]);
+      Serial.printf("ok #%d = %d" LF, 500+cmdIndex, variables[cmdIndex - 500]);
   }
-  else
-	Serial.printf("err %d not found\r\n", cmdIndex);
+  else if (cmdIndex > -1)
+    Serial.printf("err %d not found" LF, cmdIndex);
   return running;
 }
 
@@ -341,7 +354,7 @@ void loop()
       if (tmp > 0)
         ret += tmp;
       else if (tmp < 0)
-        Serial.printf("err endstop\r\n");
+        Serial.printf("err endstop" LF);
     }
   }
   if (ret == 0)
@@ -358,7 +371,7 @@ void loop()
         Serial.printf("%c: %d ", motion[i], stepper[i]->position());
       }
     }
-    Serial.printf("\r\n");
+    Serial.printf(LF);
     digitalWrite(ledPin,LOW);
     action = NULL;
   }
