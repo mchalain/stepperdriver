@@ -178,6 +178,7 @@ void Stepper::start()
 void Stepper::stop(int disable)
 {
 	this->timer->stop();
+	this->stepPin->value(false);
 	if (!(this->_state & FORCE_ENABLE) || disable)
 	{
 		this->enPin->value(!this->_enable);
