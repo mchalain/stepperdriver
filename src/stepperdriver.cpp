@@ -74,14 +74,20 @@ void Stepper::setup(Stepper::Setting setting, int value)
 				this->_move = this->_linear;
 		break;
 		case Stepper::Accel:
+			if (this->_state & MILLIMODE)
+				value *= this->_stepsmm;
 			if (value > 0)
 				this->_linear->_accel = value;
 		break;
 		case Stepper::MaxSpeed:
+			if (this->_state & MILLIMODE)
+				value *= this->_stepsmm;
 			if (value > 0)
 				this->_linear->_maxspeed = value;
 		break;
 		case Stepper::MaxPosition:
+			if (this->_state & MILLIMODE)
+				value *= this->_stepsmm;
 			if (value > 1)
 				this->_max = value;
 		break;
@@ -184,7 +190,12 @@ int Stepper::enabled()
 }
 unsigned int Stepper::position()
 {
-	return this->_position;
+	unsigned int position = this->_position;
+	if (this->_state & MILLIMODE)
+	{
+		position /= this->_stepsmm;
+	}
+	return position;
 }
 unsigned int Stepper::max()
 {
@@ -237,8 +248,7 @@ int Stepper::step(int speed)
 				this->_state &= ~HOMING;
 				return 0;
 			}
-			else
-				return -1;
+			return -1;
 		}
 	}
 	if (this->timer->check())
@@ -278,7 +288,7 @@ unsigned short int Stepper::Circular::speed(unsigned short int speed, int nbstep
 		this->_nbsteps = nbsteps;
 	}
 	speed = (int)((float)this->_speedtarget * sin(TWO_PI * (float)nbsteps/(float)this->_nbsteps));
-	debug("%f   %f\n", (float)nbsteps/(float)this->_nbsteps, sin(TWO_PI * (float)(nbsteps - 1)/(float)this->_nbsteps));
+	debug("%f   %f", (float)nbsteps/(float)this->_nbsteps, sin(TWO_PI * (float)(nbsteps - 1)/(float)this->_nbsteps));
 	speed = (speed < 0)? -speed:speed;
 	if (speed == this->_speedtarget)
 		debug("PI/2\n");
