@@ -315,9 +315,14 @@ unsigned short int Stepper::Linear::speed(unsigned short int speed, int nbsteps)
 {
 	if (speed == 0)
 		speed = this->_minspeed;
-	if (nbsteps < (speed / this->_accel))
-		speed -= this->_accel;
+	if (nbsteps < (speed  / this->_accel))
+	{
+		if (speed > this->_accel)
+			speed -= this->_accel;
+	}
 	else if (speed < this->_speedtarget)
+	{
 		speed += this->_accel;
+	}
 	return speed;
 }
