@@ -143,18 +143,18 @@ int Stepper::move(int distance, int hypotenuse, int speed)
 		dir = NEGATIVSENS;
 		distance = -distance;
 	}
+	changedirection(dir);
 	if (hypotenuse != 0)
 	{
 		speed *= distance;
 		speed /= hypotenuse;
 	}
-	changedirection(dir);
-	this->_nbsteps = distance;
 	if (this->_state & MILLIMODE)
 	{
-		this->_nbsteps *= this->_stepsmm;
+		distance *= this->_stepsmm;
 		speed *= this->_stepsmm;
 	}
+	this->_nbsteps = distance;
 	this->_move->settargetspeed(speed);
 	this->_speed = this->_move->speed(0, this->_nbsteps);
 	return 0;
