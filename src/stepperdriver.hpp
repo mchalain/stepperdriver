@@ -15,6 +15,7 @@ class Stepper
   GeneralInput *endPin;
   int _max;
   int _position;
+  int _offset;
   int _nbsteps;
   unsigned short int _speed;
   unsigned short int _stepsmm;
@@ -74,6 +75,7 @@ public:
     MilliMeterMode,
     Movement,
     ForceEnable,
+    Offset,
   };
   Stepper(int en, int step, int dir, unsigned int max, int end = -1, bool enState = false);
   void setup(Setting setting, int value);

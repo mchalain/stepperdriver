@@ -16,7 +16,7 @@
 Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enState)
   : enPin(nullptr), stepPin(nullptr), dirPin(nullptr), endPin(nullptr), _enable(enState), _max(max), _state(0),
     _position(0), _speed(1), _nbsteps(0),
-    _stepsmm(1)
+    _stepsmm(1), _offset(0)
 {
 	this->enPin = GeneralOutput::makeGeneralOutput(0, en);
 	this->stepPin = GeneralOutput::makeGeneralOutput(0, step);
@@ -59,6 +59,9 @@ int Stepper::setup(Stepper::Setting setting)
 		break;
 		case Stepper::ForceEnable:
 			ret = !((this->_state & FORCE_ENABLE) == 0);
+		break;
+		case Stepper::Offset:
+			ret = this->_offset;
 		break;
 	}
 	return ret;
@@ -106,6 +109,11 @@ void Stepper::setup(Stepper::Setting setting, int value)
 				this->_state |= FORCE_ENABLE;
 			else if (value == 0)
 				this->_state &= ~FORCE_ENABLE;
+		break;
+		case Stepper::Offset:
+                        if (this->_state & MILLIMODE)
+                                value *= this->_stepsmm;
+			this->_offset = value;
 		break;
 	}
 }
@@ -167,7 +175,7 @@ void Stepper::home(int speed)
 void Stepper::start()
 {
 	if ((this->_nbsteps == 0) ||
-		(this->_position == 0 && (this->_state & NEGATIVSENS)) ||
+		(this->_position == this->_offset && (this->_state & NEGATIVSENS)) ||
 		(this->_position == this->_max && !(this->_state & NEGATIVSENS)))
 	{
 		return;
@@ -243,7 +251,7 @@ int Stepper::step(int speed)
 		if (this->endPin->value())
 		{
 			stop();
-			this->_position = 0;
+			this->_position = this->_offset;
 			if (this->_state & HOMING)
 			{
 				this->_state &= ~HOMING;
@@ -258,7 +266,7 @@ int Stepper::step(int speed)
 		_handler();
 	}
 	if ((this->_nbsteps == 0) ||
-		(this->_position == 0 && (this->_state & NEGATIVSENS)) ||
+		(this->_position == this->_offset && (this->_state & NEGATIVSENS)) ||
 		(this->_position == this->_max && !(this->_state & NEGATIVSENS)))
 	{
 		stop();
