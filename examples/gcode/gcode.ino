@@ -34,9 +34,10 @@ Stepper *stepper[6] = {NULL, NULL, NULL, NULL, NULL, NULL};
 #define ORTOGONALAXIS 2
 #define SAFETED 3
 #define ABSOLUTE 4
-#define NBVARIABLES ABSOLUTE
+#define STAYENABLE 5
+#define NBVARIABLES STAYENABLE
 int variables[NBVARIABLES + 1] = {
-  1000, 1000, ZM, 100, 0
+  1000, 1000, ZM, 100, 0, 0
 };
 
 // function for sequences
@@ -182,7 +183,7 @@ int executeGCode(String cmd, int running)
     {
       if (stepper[i])
       {
-        stepper[i]->stop();
+        stepper[i]->stop(true);
       }
     }
     Serial.printf("ok" LF);
@@ -341,6 +342,13 @@ int executeGCode(String cmd, int running)
     break;
     case 28:
     {
+      if (variables[STAYENABLE])
+      {
+        for (int i = 0; i < NBAXIS; i++)
+        {
+          stepper[i]->setup(Stepper::ForceEnable, 1);
+        }
+      }
       /**
        * Up the head before to search the home on the other axis
        */
