@@ -47,7 +47,8 @@ action_f action = NULL;
 void setup() {
   Serial.begin(11500);
   while (!Serial);
-  stepper[XM] = new Stepper(2,3,4,14000,5);
+  stepper[XM] = new Stepper(2,4,3,14000,5);
+  stepper[YM] = new Stepper(13,12,11,14000,10);
   pinMode(ledPin,OUTPUT);
 }
 
