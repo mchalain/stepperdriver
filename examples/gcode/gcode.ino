@@ -7,6 +7,11 @@
  *  G1 X400 : move the motor of X axe to 2000 fast
  *  G2 D3000 : move X Y motors to generate circle diameter 3000
  */
+#ifdef DEBUG
+#define debug(format,... ) Serial.printf(format"\r\n", ##__VA_ARGS__)
+#else
+#define debug(...)
+#endif
 #include "stepperdriver.hpp"
 
 #define ledPin 25
@@ -202,16 +207,30 @@ int executeGCode(String cmd, int running)
     case 92:
     {
       int stepspermilli;
+      Serial.printf("ok ");
       for (int i = 0; i < NBAXIS; i++)
       {
         if (stepper[i])
         {
           stepspermilli = parseNumber(cmd, motion[i], -1);
-          stepper[i]->setup(Stepper::StepsPerMilliMeter, stepspermilli);
-          stepper[i]->setup(Stepper::MilliMeterMode, 1);
+          if (stepspermilli == 1)
+          {
+            stepper[i]->setup(Stepper::MilliMeterMode, 0);
+            Serial.printf("%c: Millimeter disable ", motion[i]);
+          }
+          else
+          {
+            if (stepspermilli > 0)
+            {
+              stepper[i]->setup(Stepper::StepsPerMilliMeter, stepspermilli);
+              stepper[i]->setup(Stepper::MilliMeterMode, 1);
+            }
+            stepspermilli = stepper[i]->setup(Stepper::StepsPerMilliMeter);
+            Serial.printf("%c: %d ", motion[i], stepspermilli);
+          }
         }
       }
-      Serial.printf("ok" LF);
+      Serial.printf(LF);
     }
     break;
     case 114:
@@ -229,13 +248,38 @@ int executeGCode(String cmd, int running)
     break;
     case 201:
     {
+      Serial.printf("ok");
       int accel;
       for (int i = 0; i < NBAXIS; i++)
       {
-        accel = parseNumber(cmd, motion[i], -1);
-        stepper[i]->setup(Stepper::Accel, accel);
+        if (stepper[i])
+        {
+          accel = parseNumber(cmd, motion[i], -1);
+          if (accel > 0)
+            stepper[i]->setup(Stepper::Accel, accel);
+          accel = stepper[i]->setup(Stepper::Accel);
+          Serial.printf("%c: %d ", motion[i], accel);
+        }
       }
-      Serial.printf("ok" LF);
+      Serial.printf(LF);
+    }
+    break;
+    case 851:
+    {
+      Serial.printf("ok");
+      int offset;
+      for (int i = 0; i < NBAXIS; i++)
+      {
+        if (stepper[i])
+        {
+          offset = parseNumber(cmd, motion[i], INT_MIN);
+          if (offset != INT_MIN)
+            stepper[i]->setup(Stepper::Offset, offset);
+          offset = stepper[i]->setup(Stepper::Offset);
+          Serial.printf("%c: %d ", motion[i], offset);
+        }
+      }
+      Serial.printf(LF);
     }
     break;
     case -1:
@@ -250,12 +294,20 @@ int executeGCode(String cmd, int running)
    */
   for (int i = 0; i < NBAXIS; i++)
   {
-    coord[i] = parseNumber(cmd, motion[i], 0);
-    /**
-     * StepperDriver library uses only Relativ coordonnes
-     */
-    if (!variables[ABSOLUTE] && coord[i] && stepper[i])
-      coord[i] -= stepper[i]->position();
+    if (variables[ABSOLUTE])
+    {
+      coord[i] = parseNumber(cmd, motion[i], -1);
+      /**
+       * StepperDriver library uses only Absolute coordonnes
+       * for movement, but position is absolute
+       */
+      if ((coord[i] != -1) && stepper[i])
+        coord[i] -= stepper[i]->position();
+      else
+        coord[i] = 0;
+    }
+    else
+      coord[i] = parseNumber(cmd, motion[i], 0);
   }
   int speed = parseNumber(cmd, 'F', variables[FEEDRATE]);
   cmdIndex = parseNumber(cmd, 'G', -1);
@@ -351,17 +403,26 @@ void loop()
   }
   digitalWrite(ledPin,HIGH);
   int ret = 0;
+  debug("step ");
   for (int i = 0; i < NBAXIS; i++)
   {
     if (stepper[i])
     {
       int tmp = stepper[i]->step();
-      if (tmp > 0)
+      if (tmp >= 0)
+      {
         ret += tmp;
+        debug("%c: %d ", motion[i], tmp);
+      }
       else if (tmp < 0)
-        Serial.printf("err endstop" LF);
+      {
+        debug(LF);
+        Serial.printf("err %c: endstop" LF, motion[i]);
+        debug("step ");
+      }
     }
   }
+  debug(LF);
   if (ret == 0)
   {
       running = action(running);
