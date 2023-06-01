@@ -187,9 +187,10 @@ The current commands are:
  * **G91** : set the system to use relativ coordinate
  * **G2**  : ....should define a rotation movement
  * **M0**  ; stop the motors
+ * **M92** : set the number of steps per millimeter for each motor
  * **M112**: urgent stop
  * **M201**: set the maximum acceleration for each motor
- * **M92** : set the number of steps per millimeter for each motor
+ * **M851**: set the offset of each motor (offset the position of endstop in number of steps)
  * **F...**: set the feedrate (slow speed) for one movement
  * **X...**: set a value for the X axis motor (depends on the command)
  * **Y...**: idem for Y axis
@@ -205,6 +206,7 @@ The current variables are:
  * **#502** : the ortogonal axis to the working plane (default: Z axis)
  * **#503** : the safeted distance to move on the axis
  * **#504** : set relative or absolute coordonnes (same as G90/G91)
+ * **#505** : force the motors to stay enable after moving
 
 Returned strings:  
 Each command should return at least one line. The contain depends on the command but should begin by:
