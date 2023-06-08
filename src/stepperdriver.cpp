@@ -21,10 +21,13 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enSt
 	this->enPin = GeneralOutput::makeGeneralOutput(0, en);
 	this->stepPin = GeneralOutput::makeGeneralOutput(0, step);
 	this->dirPin = GeneralOutput::makeGeneralOutput(0, dir);
+	this->_free = false;
 	if (end > -1)
 		this->endPin = GeneralInput::makeGeneralInput(0, end);
 	else if (end < -1)
 		this->endPin = GeneralInput::makeGeneralInput(0, -end, true);
+	else
+		this->_free = true;
 	this->enPin->value(!this->_enable);
 	this->_linear = new Linear(2000, 0, 100);
 	this->_circular = new Circular(2000, 0, 100);
@@ -171,6 +174,8 @@ int Stepper::turn(int distance, int speed)
 }
 void Stepper::home(int speed)
 {
+	if (this->_free)
+		return;
 	if (this->endPin != nullptr)
 	{
 		this->_position = 1;
@@ -180,12 +185,12 @@ void Stepper::home(int speed)
 }
 void Stepper::start()
 {
-	if ((this->_nbsteps == 0) ||
-		(this->_position == this->_offset && (this->_state & NEGATIVSENS)) ||
-		(this->_position == this->_max && !(this->_state & NEGATIVSENS)))
-	{
+	if (this->_nbsteps == 0)
 		return;
-	}
+	if (!this->_free &&
+		((this->_position == this->_offset && (this->_state & NEGATIVSENS)) ||
+		(this->_position == this->_max && !(this->_state & NEGATIVSENS))))
+		return;
 	this->enPin->value(this->_enable);
 	this->timer->start((MAXSTEPS / 2) / this->_speed);
 }
@@ -271,12 +276,17 @@ int Stepper::step(int speed)
 		this->timer->restart((MAXSTEPS / 2) / this->_speed);
 		_handler();
 	}
-	if ((this->_nbsteps == 0) ||
-		(this->_position == this->_offset && (this->_state & NEGATIVSENS)) ||
-		(this->_position == this->_max && !(this->_state & NEGATIVSENS)))
+	if (this->_nbsteps == 0)
 	{
 		stop();
 		return 0;
+	}
+	else if (!this->_free &&
+			((this->_position == this->_offset && (this->_state & NEGATIVSENS)) ||
+			(this->_position == this->_max && !(this->_state & NEGATIVSENS))))
+	{
+		stop();
+		return -2;
 	}
 	return this->_nbsteps;
 }

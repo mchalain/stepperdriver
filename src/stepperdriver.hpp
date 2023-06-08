@@ -21,6 +21,7 @@ class Stepper
   unsigned short int _stepsmm;
   char _state;
   bool _enable;
+  bool _free;
   Timer *timer;
 
   class Move
