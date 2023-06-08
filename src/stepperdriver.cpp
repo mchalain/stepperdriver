@@ -26,8 +26,8 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enSt
 	else if (end < -1)
 		this->endPin = GeneralInput::makeGeneralInput(0, -end, true);
 	this->enPin->value(!this->_enable);
-	this->_linear = new Linear(2000, 0, 10);
-	this->_circular = new Circular(2000, 0, 10);
+	this->_linear = new Linear(2000, 0, 100);
+	this->_circular = new Circular(2000, 0, 100);
 	this->_move = this->_linear;
 	this->timer = Timer::makeTimer();
 }
@@ -80,13 +80,19 @@ void Stepper::setup(Stepper::Setting setting, int value)
 			if (this->_state & MILLIMODE)
 				value *= this->_stepsmm;
 			if (value > 0)
+			{
+				this->_circular->_accel = value;
 				this->_linear->_accel = value;
+			}
 		break;
 		case Stepper::MaxSpeed:
 			if (this->_state & MILLIMODE)
 				value *= this->_stepsmm;
 			if (value > 0)
+			{
+				this->_circular->_maxspeed = value;
 				this->_linear->_maxspeed = value;
+			}
 		break;
 		case Stepper::MaxPosition:
 			if (this->_state & MILLIMODE)
