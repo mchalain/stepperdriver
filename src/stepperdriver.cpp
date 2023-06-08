@@ -29,8 +29,8 @@ Stepper::Stepper(int en, int step, int dir, unsigned int max, int end, bool enSt
 	else
 		this->_free = true;
 	this->enPin->value(!this->_enable);
-	this->_linear = new Linear(2000, 0, 100);
-	this->_circular = new Circular(2000, 0, 100);
+	this->_linear = new Linear(2000, 100, 50);
+	this->_circular = new Circular(2000, 100, 50);
 	this->_move = this->_linear;
 	this->timer = Timer::makeTimer();
 }
