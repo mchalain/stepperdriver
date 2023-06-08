@@ -425,10 +425,18 @@ void loop()
         ret += tmp;
         debug("%c: %d ", motion[i], tmp);
       }
-      else if (tmp < 0)
+      else if (tmp == -1)
       {
+        /** -1 for endstop sensor detected */
         debug(LF);
         Serial.printf("err %c: endstop" LF, motion[i]);
+        debug("step ");
+      }
+      else if (tmp < -1)
+      {
+        /** -2 for position out of range [offset, max] */
+        debug(LF);
+        Serial.printf("err %c: bad position %d" LF, motion[i], stepper[i]->position());
         debug("step ");
       }
     }
