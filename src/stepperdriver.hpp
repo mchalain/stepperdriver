@@ -82,7 +82,6 @@ public:
   void setup(Setting setting, int value);
   int setup(Setting setting);
   int turn(int distance, int speed = 4000);
-  int move(int distance, int hypotenuse, int speed = 4000);
   void changedirection(int dir);
   void home(int speed = 2000);
   int step(int speed);

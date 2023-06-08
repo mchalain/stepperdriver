@@ -142,7 +142,7 @@ void Stepper::changedirection(int dir)
 	}
 	this->dirPin->value(this->_state & NEGATIVSENS);
 }
-int Stepper::move(int distance, int hypotenuse, int speed)
+int Stepper::turn(int distance, int speed)
 {
 	if (enabled())
 		return -1;
@@ -153,11 +153,6 @@ int Stepper::move(int distance, int hypotenuse, int speed)
 		distance = -distance;
 	}
 	changedirection(dir);
-	if (hypotenuse != 0)
-	{
-		speed *= distance;
-		speed /= hypotenuse;
-	}
 	if (this->_state & MILLIMODE)
 	{
 		distance *= this->_stepsmm;
@@ -167,10 +162,6 @@ int Stepper::move(int distance, int hypotenuse, int speed)
 	this->_move->settargetspeed(speed);
 	this->_speed = this->_move->speed(0, this->_nbsteps);
 	return 0;
-}
-int Stepper::turn(int distance, int speed)
-{
-	return this->move(distance, 0, speed);
 }
 void Stepper::home(int speed)
 {
