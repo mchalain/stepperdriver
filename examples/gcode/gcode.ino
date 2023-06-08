@@ -1,7 +1,7 @@
 
 /**
  * GCode parser for stepperdriver
- * Commandes vailable:
+ * Commandes available:
  *  G28 : search the endstop of each axe
  *  G0 X2000 : move the motor of X axe to 2000
  *  G1 X400 : move the motor of X axe to 2000 fast
@@ -12,7 +12,7 @@
 #else
 #define debug(...)
 #endif
-#include "stepperdriver.hpp"
+#include <stepperdriver.hpp>
 
 #define ledPin 25
 
@@ -68,9 +68,11 @@ void line(int coord[NBAXIS], int speed)
     {
       stepper[i]->setup(Stepper::Movement, LINEARMOVEMENT);
       if (i != variables[ORTOGONALAXIS])
-        stepper[i]->move(coord[i], H, speed);
-      else
-        stepper[i]->turn(coord[i], speed);
+      {
+        speed *= coord[i];
+        speed /= H;
+      }
+      stepper[i]->turn(coord[i], speed);
     }
   }
   for (int i = 0; i < NBAXIS; i++)
