@@ -372,7 +372,7 @@ int executeGCode(String cmd, int running)
     }
   }
   cmdIndex = parseNumber(cmd, '#', -1);
-  if (cmdIndex > 500)
+  if (cmdIndex > (500-1))
   {
     int value = parseNumber(cmd, '=', 0x7FFF);
     if (value != 0x7FFF)
@@ -381,7 +381,7 @@ int executeGCode(String cmd, int running)
       Serial.printf("ok" LF);
     }
     else
-      Serial.printf("ok #%d = %d" LF, 500+cmdIndex, variables[cmdIndex - 500]);
+      Serial.printf("ok #%d = %d" LF, cmdIndex, variables[cmdIndex - 500]);
   }
   else if (cmdIndex > -1)
     Serial.printf("err %d not found" LF, cmdIndex);
