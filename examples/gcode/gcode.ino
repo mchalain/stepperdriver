@@ -47,8 +47,15 @@ action_f action = NULL;
 void setup() {
   Serial.begin(11500);
   while (!Serial);
-  stepper[XM] = new Stepper(2,4,3,14000,5);
-  stepper[YM] = new Stepper(13,12,11,14000,10);
+  pinMode(19, INPUT);
+  if (digitalRead(19))
+    stepper[XM] = new Stepper(2,4,3,14000,5);
+  pinMode(20, INPUT);
+  if (digitalRead(20))
+    stepper[YM] = new Stepper(13,12,11,14000,10);
+  pinMode(21, INPUT);
+  if (digitalRead(21))
+    stepper[ZM] = new Stepper(6,7,8,14000,9);
   pinMode(ledPin,OUTPUT);
 }
 
